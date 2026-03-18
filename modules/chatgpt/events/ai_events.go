@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"regexp"
 	"strings"
+	"time"
 
 	"github.com/S42yt/tuubaa-bot/core"
 	"github.com/S42yt/tuubaa-bot/modules/chatgpt/commands"
@@ -60,7 +61,7 @@ func messageCreateHandler(s *discordgo.Session, m *discordgo.MessageCreate) {
 	cleanPrompt, err := handler.ValidateAndCleanPrompt(prompt)
 	if err != nil {
 		ulog.Warn("[AI] Prompt validation error: %v", err)
-		sendMessage(s, m.ChannelID, fmt.Sprintf("❌ %s", err.Error()))
+		sendSelfDeletingMessage(s, m.ChannelID, fmt.Sprintf("❌ %s", err.Error()))
 		return
 	}
 	ulog.Debug("[AI] Clean prompt (%d chars): %s", len(cleanPrompt), cleanPrompt)
@@ -74,7 +75,7 @@ func messageCreateHandler(s *discordgo.Session, m *discordgo.MessageCreate) {
 	response, err := handler.GetAIResponseWithHistory(cleanPrompt, m.ChannelID)
 	if err != nil {
 		ulog.Error("[AI] API error: %v", err)
-		sendMessage(s, m.ChannelID, fmt.Sprintf("❌ Fehler bei der Verarbeitung: %v", err))
+		sendSelfDeletingMessage(s, m.ChannelID, fmt.Sprintf("❌ Fehler bei der Verarbeitung: %v", err))
 		return
 	}
 	ulog.Debug("[AI] Got response from API: %s", response)
@@ -124,4 +125,23 @@ func sendMessage(s *discordgo.Session, channelID string, content string) {
 		return
 	}
 	ulog.Debug("[AI] Message sent successfully")
+}
+
+func sendSelfDeletingMessage(s *discordgo.Session, channelID string, content string) {
+	
+	ulog.Debug("[AI] sendSelfDeletingMessage called with content length: %d", len(content))
+	if len(content) > 2000 {
+		ulog.Warn("[AI] Self-deleting message truncated from %d to 2000 chars", len(content))
+		content = content[:1997] + "..."
+	}
+
+	ulog.Debug("[AI] Sending self-deleting message to channel %s", channelID)
+	msg, err := s.ChannelMessageSend(channelID, content)
+	if err != nil {
+		ulog.Error("[AI] Error sending self-deleting message: %v", err)
+		return
+	}
+	ulog.Debug("[AI] Self-deleting message sent successfully")
+	time.Sleep(2 * time.Second)
+    s.ChannelMessageDelete(channelID, msg.ID)
 }

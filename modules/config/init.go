@@ -50,6 +50,7 @@ func init() {
 					{Name: "Welcome Channel", Value: "welcome"},
 					{Name: "Main Channel", Value: "main"},
 					{Name: "Counter Channel", Value: "counterchannel"},
+					{Name: "Logs Channel", Value: "logs"},
 				},
 			},
 			{

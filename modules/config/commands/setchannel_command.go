@@ -55,6 +55,8 @@ func handleSetChannel(s *discordgo.Session, i *discordgo.InteractionCreate) erro
 		fieldName = "main_channel"
 	case "counterchannel":
 		fieldName = "counter_channel"
+	case "logs":
+		fieldName = "logs_channel"
 	default:
 		return respond(s, i, "Unknown channel config key")
 	}
