@@ -19,7 +19,7 @@ func GetAIResponse(userPrompt string) (string, error) {
 }
 
 func GetAIResponseWithHistory(userPrompt string, channelID string) (string, error) {
-	ulog.Info("[AI] GetAIResponse called with prompt: %s (channel: %s)", userPrompt, channelID)
+	ulog.Debug("[AI] GetAIResponse called with prompt: %s (channel: %s)", userPrompt, channelID)
 
 	token := os.Getenv("GPT_TOKEN")
 	if token == "" {
@@ -40,14 +40,14 @@ func GetAIResponseWithHistory(userPrompt string, channelID string) (string, erro
 
 	if channelID != "" {
 		history := GetConversationHistory(channelID)
-		ulog.Info("[AI] Adding %d messages from conversation history", len(history))
+		ulog.Debug("[AI] Adding %d messages from conversation history", len(history))
 		historyMessages := ConvertHistoryToOpenAIMessages(history)
 		messages = append(messages, historyMessages...)
 	}
 
 	messages = append(messages, openai.UserMessage(userPrompt))
 
-	ulog.Info("[AI] Sending request to OpenAI API with %d messages", len(messages))
+	ulog.Debug("[AI] Sending request to OpenAI API with %d messages", len(messages))
 	resp, err := client.Chat.Completions.New(ctx, openai.ChatCompletionNewParams{
 		Model:       openai.ChatModelGPT4oMini,
 		Messages:    messages,
@@ -58,7 +58,7 @@ func GetAIResponseWithHistory(userPrompt string, channelID string) (string, erro
 		ulog.Error("[AI] OpenAI API error: %v (type: %T)", err, err)
 		return "", err
 	}
-	ulog.Info("[AI] OpenAI API response received")
+	ulog.Debug("[AI] OpenAI API response received")
 
 	if len(resp.Choices) == 0 {
 		ulog.Error("[AI] No choices in OpenAI response")
@@ -66,7 +66,7 @@ func GetAIResponseWithHistory(userPrompt string, channelID string) (string, erro
 	}
 
 	content := strings.TrimSpace(resp.Choices[0].Message.Content)
-	ulog.Info("[AI] Response content: %s", content)
+	ulog.Debug("[AI] Response content: %s", content)
 	return content, nil
 }
 

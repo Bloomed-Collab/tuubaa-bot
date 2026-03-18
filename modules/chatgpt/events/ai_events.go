@@ -77,7 +77,7 @@ func messageCreateHandler(s *discordgo.Session, m *discordgo.MessageCreate) {
 		sendMessage(s, m.ChannelID, fmt.Sprintf("❌ Fehler bei der Verarbeitung: %v", err))
 		return
 	}
-	ulog.Info("[AI] Got response from API: %s", response)
+	ulog.Debug("[AI] Got response from API: %s", response)
 
 	ulog.Debug("[AI] Response ready to send (not cached)")
 
