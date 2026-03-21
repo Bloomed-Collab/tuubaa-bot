@@ -48,6 +48,23 @@ func Register(cmd *Command) error {
 	return nil
 }
 
+func GetAllCommands() map[string]*Command {
+	mu.RLock()
+	defer mu.RUnlock()
+
+	result := make(map[string]*Command, len(commands))
+	for name, cmd := range commands {
+		result[name] = cmd
+	}
+	return result
+}
+
+func GetCommandCount() int {
+	mu.RLock()
+	defer mu.RUnlock()
+	return len(commands)
+}
+
 func Init(s *discordgo.Session) error {
 	if s.State == nil || s.State.User == nil {
 		return errors.New("session state not ready; call Init from Ready handler")
@@ -75,16 +92,12 @@ func InitWithGuild(s *discordgo.Session, guildID string) error {
 		modalHandlerAttached = true
 	}
 
-	if err := Clear(s, guildID); err != nil {
-		ulog.Warn("failed to clear existing guild commands: %v", err)
-	}
-
 	var appCommands []*discordgo.ApplicationCommand
 	for _, c := range commands {
 		appCommands = append(appCommands, &discordgo.ApplicationCommand{
-			Name:                     c.Name,
-			Description:              c.Description,
-			Options:                  c.Options,
+			Name:        c.Name,
+			Description: c.Description,
+			Options:     c.Options,
 		})
 	}
 
@@ -176,17 +189,6 @@ func applyCommandPermissions(s *discordgo.Session, appID, guildID string, cmdIDM
 		}
 	}
 
-	return nil
-}
-
-func Clear(s *discordgo.Session, guildID string) error {
-	if s.State == nil || s.State.User == nil {
-		return errors.New("session state not ready; call Clear after Ready")
-	}
-	appID := s.State.User.ID
-	if _, err := s.ApplicationCommandBulkOverwrite(appID, guildID, []*discordgo.ApplicationCommand{}); err != nil {
-		return err
-	}
 	return nil
 }
 
@@ -334,6 +336,8 @@ func messageHandler(s *discordgo.Session, m *discordgo.MessageCreate) {
 	switch command {
 	case "registerCommands":
 		handleRegisterCommands(s, m)
+	case "listCommands":
+		handleListCommands(s, m)
 	}
 }
 
@@ -364,4 +368,76 @@ func handleRegisterCommands(s *discordgo.Session, m *discordgo.MessageCreate) {
 
 	s.ChannelMessageSend(m.ChannelID, fmt.Sprintf("Successfully registered %d commands!", count))
 	ulog.Info("Commands registered via !registerCommands by user %s", m.Author.ID)
+}
+
+func handleListCommands(s *discordgo.Session, m *discordgo.MessageCreate) {
+	allCommands := GetAllCommands()
+
+	if len(allCommands) == 0 {
+		s.ChannelMessageSend(m.ChannelID, "No commands registered.")
+		return
+	}
+
+	message := fmt.Sprintf("**Registered Commands (%d)**\n```\n", len(allCommands))
+
+	cmdNames := make([]string, 0, len(allCommands))
+	for name := range allCommands {
+		cmdNames = append(cmdNames, name)
+	}
+
+	for i := 0; i < len(cmdNames); i++ {
+		for j := i + 1; j < len(cmdNames); j++ {
+			if cmdNames[i] > cmdNames[j] {
+				cmdNames[i], cmdNames[j] = cmdNames[j], cmdNames[i]
+			}
+		}
+	}
+
+	for _, name := range cmdNames {
+		cmd := allCommands[name]
+		perms := []string{}
+		if cmd.AllowEveryone {
+			perms = append(perms, "everyone")
+		}
+		if cmd.AllowAdmin {
+			perms = append(perms, "admin")
+		}
+		if cmd.AllowStaff {
+			perms = append(perms, "staff")
+		}
+
+		permStr := ""
+		if len(perms) > 0 {
+			permStr = fmt.Sprintf(" [%s]", fmt.Sprintf("%v", perms)[1:len(fmt.Sprintf("%v", perms))-1])
+		}
+
+		cooldownStr := ""
+		if cmd.Cooldown > 0 {
+			cooldownStr = fmt.Sprintf(" (cooldown: %ds)", cmd.Cooldown)
+		}
+
+		message += fmt.Sprintf("• %s - %s%s%s\n", name, cmd.Description, cooldownStr, permStr)
+	}
+
+	message += "```"
+
+	if len(message) > 1900 {
+		chunk := "**Registered Commands - Part 1**\n```\n"
+		for _, name := range cmdNames {
+			cmd := allCommands[name]
+			line := fmt.Sprintf("• %s - %s\n", name, cmd.Description)
+			if len(chunk)+len(line) > 1900 {
+				chunk += "```"
+				s.ChannelMessageSend(m.ChannelID, chunk)
+				chunk = "```\n"
+			}
+			chunk += line
+		}
+		chunk += "```"
+		s.ChannelMessageSend(m.ChannelID, chunk)
+	} else {
+		s.ChannelMessageSend(m.ChannelID, message)
+	}
+
+	ulog.Info("Commands listed via !listCommands by user %s", m.Author.ID)
 }
