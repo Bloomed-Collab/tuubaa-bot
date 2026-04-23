@@ -1,0 +1,36 @@
+services:
+  mongodb:
+    image: mongo:8.0
+    container_name: tuubaa-mongodb
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_DATABASE: tuubaa
+    volumes:
+      - mongodb_data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "mongodb://localhost:27017/admin", "--eval", "db.runCommand({ ping: 1 }).ok"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  bot:
+    build:
+      context: .
+    container_name: tuubaa-bot
+    restart: unless-stopped
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    environment:
+      DISCORD_TOKEN: ${DISCORD_TOKEN}
+      TOKEN: ${TOKEN}
+      GUILD_ID: ${GUILD_ID}
+      LOG_DEBUG: ${LOG_DEBUG}
+      MONGO_DB: ${MONGO_DB:-tuubaa}
+      MONGO_URI: ${MONGO_URI:-mongodb://mongodb:27017}
+    volumes:
+      - ./assets:/app/assets:ro
+
+volumes:
+  mongodb_data:
+
