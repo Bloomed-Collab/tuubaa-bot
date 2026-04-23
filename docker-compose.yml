@@ -23,8 +23,6 @@ services:
         condition: service_healthy
     environment:
       DISCORD_TOKEN: ${DISCORD_TOKEN}
-      TOKEN: ${TOKEN}
-      GUILD_ID: ${GUILD_ID}
       LOG_DEBUG: ${LOG_DEBUG}
       MONGO_DB: ${MONGO_DB:-tuubaa}
       MONGO_URI: ${MONGO_URI:-mongodb://mongodb:27017}
