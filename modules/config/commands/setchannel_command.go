@@ -12,6 +12,10 @@ import (
 )
 
 func handleSetChannel(s *discordgo.Session, i *discordgo.InteractionCreate) error {
+	if err := deferConfigResponse(s, i); err != nil {
+		return err
+	}
+
 	data := i.ApplicationCommandData().Options[0]
 	var targetChannelID string
 	var whichKey string
@@ -57,6 +61,8 @@ func handleSetChannel(s *discordgo.Session, i *discordgo.InteractionCreate) erro
 		fieldName = "counter_channel"
 	case "logs":
 		fieldName = "logs_channel"
+	case "bot":
+		fieldName = "bot_channel"
 	default:
 		return respond(s, i, "Unknown channel config key")
 	}
@@ -74,9 +80,5 @@ func handleSetChannel(s *discordgo.Session, i *discordgo.InteractionCreate) erro
 	}
 
 	resp := vembed.BuildChannelSetResponse(targetChannelID, i.Member.User.Username, whichKey)
-
-	return s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
-		Type: discordgo.InteractionResponseChannelMessageWithSource,
-		Data: resp,
-	})
+	return editResponseData(s, i, resp)
 }

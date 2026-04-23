@@ -17,6 +17,8 @@ func ConfigRoleHandler() func(s *discordgo.Session, i *discordgo.InteractionCrea
 			return handleSetRole(s, i)
 		case "setchannel":
 			return handleSetChannel(s, i)
+		case "setlevelrole":
+			return handleSetLevelRole(s, i)
 		default:
 			return respond(s, i, "Unknown subcommand")
 		}

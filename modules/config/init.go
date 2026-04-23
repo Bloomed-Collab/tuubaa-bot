@@ -51,6 +51,7 @@ func init() {
 					{Name: "Main Channel", Value: "main"},
 					{Name: "Counter Channel", Value: "counterchannel"},
 					{Name: "Logs Channel", Value: "logs"},
+					{Name: "Bot Channel", Value: "bot"},
 				},
 			},
 			{
@@ -62,10 +63,37 @@ func init() {
 		},
 	}
 
+	setLevelRole := &discordgo.ApplicationCommandOption{
+		Type:        discordgo.ApplicationCommandOptionSubCommand,
+		Name:        "setlevelrole",
+		Description: "Rolle festlegen, die bei einem Level-Meilenstein vergeben wird",
+		Options: []*discordgo.ApplicationCommandOption{
+			{
+				Type:        discordgo.ApplicationCommandOptionString,
+				Name:        "level",
+				Description: "Level-Meilenstein",
+				Required:    true,
+				Choices: []*discordgo.ApplicationCommandOptionChoice{
+					{Name: "Level 20", Value: "20"},
+					{Name: "Level 40", Value: "40"},
+					{Name: "Level 60", Value: "60"},
+					{Name: "Level 80", Value: "80"},
+					{Name: "Level 100", Value: "100"},
+				},
+			},
+			{
+				Type:        discordgo.ApplicationCommandOptionRole,
+				Name:        "role",
+				Description: "Rolle, die ab diesem Level vergeben wird",
+				Required:    true,
+			},
+		},
+	}
+
 	cfgCmd := &core.Command{
 		Name:        "config",
 		Description: "Guild-specific configuration",
-		Options:     []*discordgo.ApplicationCommandOption{setRole, setChannel},
+		Options:     []*discordgo.ApplicationCommandOption{setRole, setChannel, setLevelRole},
 		AllowAdmin:  true,
 		Handler:     commands.ConfigRoleHandler(),
 	}

@@ -13,6 +13,7 @@ require (
 )
 
 require (
+	github.com/cenkalti/dominantcolor v1.0.3 // indirect
 	github.com/gorilla/websocket v1.4.2 // indirect
 	github.com/klauspost/compress v1.17.6 // indirect
 	github.com/tidwall/gjson v1.14.4 // indirect

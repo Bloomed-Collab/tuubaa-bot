@@ -18,7 +18,22 @@ func BuildRoleSetResponse(roleKey, roleID, executor string) *discordgo.Interacti
 
 	return &discordgo.InteractionResponseData{
 		Components: []discordgo.MessageComponent{comp},
-		Flags:      discordgo.MessageFlagsIsComponentsV2 | discordgo.MessageFlagsEphemeral,
+		Flags:      discordgo.MessageFlagsIsComponentsV2,
+	}
+}
+
+func BuildLevelRoleSetResponse(level, roleID, executor string) *discordgo.InteractionResponseData {
+	main := v2.NewTextDisplayBuilder().SetContent(fmt.Sprintf("## Level Role gesetzt: Level %s", level)).Build()
+	footer := v2.NewTextDisplayBuilder().SetContent(fmt.Sprintf("- <@&%s> wird ab Level %s vergeben (gesetzt von %s)", roleID, level, executor)).Build()
+
+	comp := v2.NewContainerBuilder().SetAccentColor(0x5865F2).
+		AddComponent(main).
+		AddComponent(footer).
+		Build()
+
+	return &discordgo.InteractionResponseData{
+		Components: []discordgo.MessageComponent{comp},
+		Flags:      discordgo.MessageFlagsIsComponentsV2,
 	}
 }
 
@@ -33,6 +48,6 @@ func BuildChannelSetResponse(channelID, executor string, configChannel string) *
 
 	return &discordgo.InteractionResponseData{
 		Components: []discordgo.MessageComponent{comp},
-		Flags:      discordgo.MessageFlagsIsComponentsV2 | discordgo.MessageFlagsEphemeral,
+		Flags:      discordgo.MessageFlagsIsComponentsV2,
 	}
 }

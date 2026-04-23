@@ -7,11 +7,11 @@ import (
 )
 
 const (
-	ComponentTypeContainer    discordgo.ComponentType = 17
+	ComponentTypeContainer     discordgo.ComponentType = 17
 	ComponentTypeMediaGallery discordgo.ComponentType = 12
-	ComponentTypeTextDisplay  discordgo.ComponentType = 10
-	ComponentTypeSection      discordgo.ComponentType = 9
-	ComponentTypeThumbnail    discordgo.ComponentType = 11
+	ComponentTypeTextDisplay   discordgo.ComponentType = 10
+	ComponentTypeSection       discordgo.ComponentType = 9
+	ComponentTypeThumbnail     discordgo.ComponentType = 11
 )
 
 type TextDisplay struct {
@@ -21,11 +21,11 @@ type TextDisplay struct {
 func (t TextDisplay) Type() discordgo.ComponentType { return ComponentTypeTextDisplay }
 
 func (t TextDisplay) MarshalJSON() ([]byte, error) {
-	type textDisplay TextDisplay
+	type alias TextDisplay
 	return json.Marshal(struct {
-		textDisplay
+		alias
 		Type discordgo.ComponentType `json:"type"`
-	}{textDisplay: textDisplay(t), Type: t.Type()})
+	}{alias: alias(t), Type: t.Type()})
 }
 
 func NewTextDisplayBuilder() *TextDisplay { return &TextDisplay{} }
@@ -48,18 +48,18 @@ type MediaGalleryItem struct {
 }
 
 type MediaGallery struct {
-	ID    int                `json:"id,omitempty"`
+	ID    *int               `json:"id,omitempty"` // Pointer to allow omitempty
 	Items []MediaGalleryItem `json:"items"`
 }
 
 func (m MediaGallery) Type() discordgo.ComponentType { return ComponentTypeMediaGallery }
 
 func (m MediaGallery) MarshalJSON() ([]byte, error) {
-	type mediaGallery MediaGallery
+	type alias MediaGallery
 	return json.Marshal(struct {
-		mediaGallery
+		alias
 		Type discordgo.ComponentType `json:"type"`
-	}{mediaGallery: mediaGallery(m), Type: m.Type()})
+	}{alias: alias(m), Type: m.Type()})
 }
 
 func NewMediaGalleryBuilder() *MediaGallery {
@@ -85,11 +85,11 @@ type Thumbnail struct {
 func (t Thumbnail) Type() discordgo.ComponentType { return ComponentTypeThumbnail }
 
 func (t Thumbnail) MarshalJSON() ([]byte, error) {
-	type thumbnail Thumbnail
+	type alias Thumbnail
 	return json.Marshal(struct {
-		thumbnail
+		alias
 		Type discordgo.ComponentType `json:"type"`
-	}{thumbnail: thumbnail(t), Type: t.Type()})
+	}{alias: alias(t), Type: t.Type()})
 }
 
 func NewThumbnailBuilder() *Thumbnail { return &Thumbnail{} }
@@ -99,36 +99,29 @@ func (t *Thumbnail) SetURL(url string) *Thumbnail {
 	return t
 }
 
-func (t *Thumbnail) SetDescription(desc string) *Thumbnail {
-	t.Description = &desc
-	return t
-}
-
 func (t *Thumbnail) Build() discordgo.MessageComponent { return *t }
 
 type Section struct {
 	Components []discordgo.MessageComponent `json:"components"`
-	Accessory  discordgo.MessageComponent   `json:"accessory"`
+	Accessory  discordgo.MessageComponent   `json:"accessory,omitempty"` // omitempty is vital
 }
 
 func (s Section) Type() discordgo.ComponentType { return ComponentTypeSection }
 
 func (s Section) MarshalJSON() ([]byte, error) {
-	type section Section
+	type alias Section
 	return json.Marshal(struct {
-		section
+		alias
 		Type discordgo.ComponentType `json:"type"`
-	}{section: section(s), Type: s.Type()})
-}
-
-func NewSectionBuilder() *SectionBuilder {
-	return &SectionBuilder{}
+	}{alias: alias(s), Type: s.Type()})
 }
 
 type SectionBuilder struct {
 	components []discordgo.MessageComponent
 	accessory  discordgo.MessageComponent
 }
+
+func NewSectionBuilder() *SectionBuilder { return &SectionBuilder{} }
 
 func (s *SectionBuilder) AddComponent(comp discordgo.MessageComponent) *SectionBuilder {
 	s.components = append(s.components, comp)
@@ -148,7 +141,7 @@ func (s *SectionBuilder) Build() discordgo.MessageComponent {
 }
 
 type Container struct {
-	ID          int                          `json:"id,omitempty"`
+	ID          *int                         `json:"id,omitempty"`
 	AccentColor *int                         `json:"accent_color,omitempty"`
 	Spoiler     bool                         `json:"spoiler"`
 	Components  []discordgo.MessageComponent `json:"components"`
@@ -157,11 +150,11 @@ type Container struct {
 func (c Container) Type() discordgo.ComponentType { return ComponentTypeContainer }
 
 func (c Container) MarshalJSON() ([]byte, error) {
-	type container Container
+	type alias Container
 	return json.Marshal(struct {
-		container
+		alias
 		Type discordgo.ComponentType `json:"type"`
-	}{container: container(c), Type: c.Type()})
+	}{alias: alias(c), Type: c.Type()})
 }
 
 func NewContainerBuilder() *Container {
