@@ -24,6 +24,7 @@ type guildConfig struct {
 	ArtChannel1         string            `bson:"art_channel_1"`
 	ArtChannel2         string            `bson:"art_channel_2"`
 	ArtChannel3         string            `bson:"art_channel_3"`
+	TicketChannel       string            `bson:"ticket_channel"`
 }
 
 type channelCacheEntry struct {
@@ -125,6 +126,8 @@ func GetChannel(guildID, key string) (string, error) {
 		return cfg.ArtChannel2, nil
 	case "art_3":
 		return cfg.ArtChannel3, nil
+	case "ticket":
+		return cfg.TicketChannel, nil
 	}
 	return "", nil
 }

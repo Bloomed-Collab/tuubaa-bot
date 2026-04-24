@@ -26,6 +26,8 @@ func init() {
 					{Name: "Beifahrer", Value: "ROLE_BEIFAHRER"},
 					{Name: "Van Upgrader", Value: "ROLE_VAN_UPGRADER"},
 					{Name: "Join Role", Value: "join_role"},
+					{Name: "Team Role", Value: "team_role"},
+					{Name: "Artist Role", Value: "artist_role"},
 				},
 			},
 			{
@@ -57,6 +59,7 @@ func init() {
 					{Name: "Art Channel 1", Value: "art_1"},
 					{Name: "Art Channel 2", Value: "art_2"},
 					{Name: "Art Channel 3", Value: "art_3"},
+					{Name: "Ticket Channel", Value: "ticket"},
 				},
 			},
 			{
