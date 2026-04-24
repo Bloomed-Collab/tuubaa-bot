@@ -21,14 +21,3 @@ COPY --from=builder /src/assets /app/assets
 ENV MONGO_DB=tuubaa
 
 CMD ["/app/tuubaa-bot"]
-
-
-FROM gcr.io/distroless/static-debian12 AS migrate
-
-WORKDIR /app
-
-COPY --from=builder /out/tuubaa-migrate /app/tuubaa-migrate
-
-ENV MONGO_DB=tuubaa
-
-CMD ["/app/tuubaa-migrate", "level.json"]
