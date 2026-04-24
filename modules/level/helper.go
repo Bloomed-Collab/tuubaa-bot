@@ -8,8 +8,8 @@ const (
 	levelStepFactor = int64(50)
 
 	voiceDeadXP   = 3.0 
-	voiceActiveXP = 2.0 
-	voiceBusyXP   = 1.0 
+	voiceActiveXP = 2.8 
+	voiceBusyXP   = 2.5 
 
 	textMinCharLen  = 3
 	textMaxLen      = 100
@@ -149,23 +149,6 @@ func levelFromTotalXP(xp int64) int {
 	}
 	v := float64(xp) / float64(levelStepFactor/2)
 	return int(math.Floor((math.Sqrt(1+4*v) - 1) / 2))
-}
-
-func levelAccentColor(level int) int {
-	switch {
-	case level >= 100:
-		return 0xe74c3c
-	case level >= 80:
-		return 0x9b59b6
-	case level >= 60:
-		return 0x3498db
-	case level >= 40:
-		return 0x2ecc71
-	case level >= 20:
-		return 0xf39c12
-	default:
-		return 0x95a5a6
-	}
 }
 
 func voiceXPForCount(eligibleCount int) float64 {

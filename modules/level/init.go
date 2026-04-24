@@ -40,7 +40,6 @@ func init() {
 	_ = core.Register(levelCmd)
 	_ = core.Register(topCmd)
 
-	// Button handler for /top pagination
 	core.On(topButtonHandler)
 }
 
