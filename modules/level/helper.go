@@ -3,7 +3,7 @@ package level
 import "math"
 
 const (
-	lvlMax = 100
+	lvlMax = 1000
 
 	levelStepFactor = int64(50)
 
