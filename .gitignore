@@ -34,3 +34,6 @@ go.work.sum
 .DS_Store
 
 og/
+
+# MongoDB data (bind mount)
+data/

@@ -6,7 +6,7 @@ services:
     environment:
       MONGO_INITDB_DATABASE: tuubaa
     volumes:
-      - mongodb_data:/data/db
+      - ./data/mongodb:/data/db
     healthcheck:
       test: ["CMD", "mongosh", "--quiet", "--eval", "db.runCommand({ ping: 1 }).ok"]
       interval: 10s
@@ -28,6 +28,3 @@ services:
       MONGO_URI: mongodb://mongodb:27017
     volumes:
       - ./assets:/app/assets:ro
-
-volumes:
-  mongodb_data:
