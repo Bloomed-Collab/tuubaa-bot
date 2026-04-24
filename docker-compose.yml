@@ -5,10 +5,12 @@ services:
     restart: unless-stopped
     environment:
       MONGO_INITDB_DATABASE: tuubaa
+      MONGO_INITDB_ROOT_USERNAME: tuubaa
+      MONGO_INITDB_ROOT_PASSWORD: tuubaa
     volumes:
       - mongodb_data:/data/db
     healthcheck:
-      test: ["CMD", "mongosh", "--quiet", "mongodb://localhost:27017/admin", "--eval", "db.runCommand({ ping: 1 }).ok"]
+      test: ["CMD", "mongosh", "--quiet", "mongodb://tuubaa:tuubaa@localhost:27017/admin", "--eval", "db.runCommand({ ping: 1 }).ok"]
       interval: 10s
       timeout: 5s
       retries: 10
@@ -23,12 +25,11 @@ services:
         condition: service_healthy
     environment:
       DISCORD_TOKEN: ${DISCORD_TOKEN}
-      LOG_DEBUG: ${LOG_DEBUG}
-      MONGO_DB: ${MONGO_DB:-tuubaa}
-      MONGO_URI: ${MONGO_URI:-mongodb://mongodb:27017}
+      LOG_DEBUG: ${LOG_DEBUG:-false}
+      MONGO_DB: tuubaa
+      MONGO_URI: mongodb://tuubaa:tuubaa@mongodb:27017
     volumes:
       - ./assets:/app/assets:ro
 
 volumes:
   mongodb_data:
-
