@@ -65,8 +65,8 @@ func voiceTicker(s *discordgo.Session, userID, guildID string, stop chan struct{
 				continue
 			}
 
-			if shouldAwardVoiceXP(s, guildID, userID) {
-				go addXP(s, guildID, userID, voiceAwardXP)
+			if eligible, count := eligibleVoiceCount(s, guildID, userID); eligible {
+				go addXP(s, guildID, userID, voiceXPForCount(count))
 			}
 		}
 	}
@@ -86,17 +86,17 @@ func stopVoiceTicker(userID string) {
 	vMu.Unlock()
 }
 
-func shouldAwardVoiceXP(s *discordgo.Session, guildID, userID string) bool {
+func eligibleVoiceCount(s *discordgo.Session, guildID, userID string) (bool, int) {
 	vMu.RLock()
 	channelID := vChannelByUser[userID]
 	vMu.RUnlock()
 	if channelID == "" {
-		return false
+		return false, 0
 	}
 
 	guild, err := s.State.Guild(guildID)
 	if err != nil || guild == nil {
-		return false
+		return false, 0
 	}
 
 	var userVS *discordgo.VoiceState
@@ -119,7 +119,7 @@ func shouldAwardVoiceXP(s *discordgo.Session, guildID, userID string) bool {
 		}
 	}
 
-	return userVS != nil && isVoiceEligible(userVS) && eligibleInChannel >= 2
+	return userVS != nil && isVoiceEligible(userVS) && eligibleInChannel >= 2, eligibleInChannel
 }
 
 func isVoiceEligible(vs *discordgo.VoiceState) bool {

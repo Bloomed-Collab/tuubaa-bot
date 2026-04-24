@@ -7,20 +7,27 @@ const (
 
 	levelStepFactor = int64(50)
 
-	voiceAwardXP = 5.0
+	voiceDeadXP   = 3.0 
+	voiceActiveXP = 2.0 
+	voiceBusyXP   = 1.0 
 
-	textBaseXP      = 20.0
-	textPerCharXP   = 0.5
+	textMinCharLen  = 3
 	textMaxLen      = 100
-	textConstA      = 0.5
-	textOffsetX     = 0.6
-	textOffsetY     = 0.25
+	textMinXP       = 5.0
+	textMaxAwardXP  = 20.0
 	textDailyStart  = 100
 	textDailyEnd    = 600
 	textWeeklyStart = 1000
 	textWeeklyEnd   = 4000
-	textMinAwardXP  = 1.0
-	textMaxAwardXP  = 40.0
+
+	dailyXPLimit = int64(800)
+
+	textDeadThreshold   = 10
+	textActiveThreshold = 50
+
+	textDeadMultiplier       = 1.0  
+	textActiveMultiplier     = 0.65 
+	textVeryActiveMultiplier = 0.35 
 )
 
 var lockdowns = [][2]int{{0, 6 * 60}, {8 * 60, 12 * 60}}
@@ -65,24 +72,33 @@ func isLockdown(daytime int) bool {
 }
 
 func evalTextXP(contentLen, daytime, serverHour, userDaily, userWeekly int) float64 {
+	if contentLen < textMinCharLen {
+		return 0
+	}
 	length := float64(min(contentLen, textMaxLen))
-	base := textBaseXP + textPerCharXP*length
-	afterServer := base * (math.Pow(math.E, float64(serverHour)/textConstA+textOffsetX) + textOffsetY)
-	penalty := personalPenalty(userDaily, userWeekly)
-	afterUser := afterServer * penalty
-	if math.IsNaN(afterUser) || math.IsInf(afterUser, 0) {
-		afterUser = base
+	base := textMinXP + (textMaxAwardXP-textMinXP)*(length/float64(textMaxLen))
+
+	var serverMult float64
+	switch {
+	case serverHour < textDeadThreshold:
+		serverMult = textDeadMultiplier
+	case serverHour < textActiveThreshold:
+		serverMult = textActiveMultiplier
+	default:
+		serverMult = textVeryActiveMultiplier
 	}
-	if afterUser < textMinAwardXP {
-		afterUser = textMinAwardXP
+
+	xp := base * serverMult * personalPenalty(userDaily, userWeekly)
+	if math.IsNaN(xp) || math.IsInf(xp, 0) || xp < 0 {
+		xp = 0
 	}
-	if afterUser > textMaxAwardXP {
-		afterUser = textMaxAwardXP
+	if xp > textMaxAwardXP {
+		xp = textMaxAwardXP
 	}
 	if isLockdown(daytime) {
-		return math.Min(afterUser, base)
+		return math.Min(xp, base*serverMult)
 	}
-	return afterUser
+	return xp
 }
 
 func personalPenalty(daily, weekly int) float64 {
@@ -152,22 +168,14 @@ func levelAccentColor(level int) int {
 	}
 }
 
-func buildProgressBar(current, total int64) string {
-	const width = 20
-	if total <= 0 {
-		total = 1
+func voiceXPForCount(eligibleCount int) float64 {
+	switch {
+	case eligibleCount < 3:
+		return voiceDeadXP
+	case eligibleCount < 10:
+		return voiceActiveXP
+	default:
+		return voiceBusyXP
 	}
-	filled := int(float64(current) / float64(total) * width)
-	if filled > width {
-		filled = width
-	}
-	bar := ""
-	for i := 0; i < width; i++ {
-		if i < filled {
-			bar += "█"
-		} else {
-			bar += "░"
-		}
-	}
-	return bar
 }
+

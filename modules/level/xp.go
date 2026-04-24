@@ -2,6 +2,8 @@ package level
 
 import (
 	"math"
+	"sync"
+	"time"
 
 	cfg "github.com/S42yt/tuubaa-bot/modules/config"
 	ulog "github.com/S42yt/tuubaa-bot/utils/logger"
@@ -10,11 +12,40 @@ import (
 
 var levelRoleThresholds = []int{20, 40, 60, 80, 100}
 
+var (
+	dailyMu   sync.Mutex
+	dailyDate time.Time
+	dailyEarned = map[string]int64{}
+)
+
+func clampToDailyLimit(userID string, toAdd int64) int64 {
+	dailyMu.Lock()
+	defer dailyMu.Unlock()
+	today := time.Now().Truncate(24 * time.Hour)
+	if !dailyDate.Equal(today) {
+		dailyDate = today
+		dailyEarned = map[string]int64{}
+	}
+	earned := dailyEarned[userID]
+	if earned >= dailyXPLimit {
+		return 0
+	}
+	if remaining := dailyXPLimit - earned; toAdd > remaining {
+		toAdd = remaining
+	}
+	dailyEarned[userID] += toAdd
+	return toAdd
+}
+
 func addXP(s *discordgo.Session, guildID, userID string, amount float64) {
 	if amount <= 0 {
 		return
 	}
 	toAdd := int64(math.Floor(amount))
+	if toAdd == 0 {
+		return
+	}
+	toAdd = clampToDailyLimit(userID, toAdd)
 	if toAdd == 0 {
 		return
 	}
