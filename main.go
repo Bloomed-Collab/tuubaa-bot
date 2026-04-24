@@ -9,6 +9,7 @@ import (
 
 	"github.com/S42yt/tuubaa-bot/core"
 	_ "github.com/S42yt/tuubaa-bot/modules/booster"
+	_ "github.com/S42yt/tuubaa-bot/modules/gallery"
 	//_ "github.com/S42yt/tuubaa-bot/modules/chatgpt"
 	_ "github.com/S42yt/tuubaa-bot/modules/config"
 	_ "github.com/S42yt/tuubaa-bot/modules/level"
@@ -59,7 +60,8 @@ func main() {
 		discordgo.IntentsGuildPresences |
 		discordgo.IntentsGuildMembers |
 		discordgo.IntentsGuildVoiceStates |
-		discordgo.IntentsMessageContent
+		discordgo.IntentsMessageContent |
+		discordgo.IntentsGuildMessageReactions
 
 	dg.AddHandlerOnce(ready)
 

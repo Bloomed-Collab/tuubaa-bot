@@ -12,14 +12,18 @@ import (
 )
 
 type guildConfig struct {
-	GuildID        string            `bson:"guild_id"`
-	Roles          map[string]string `bson:"roles"`
-	LevelRoles     map[string]string `bson:"level_roles"`
-	WelcomeChannel string            `bson:"welcome_channel"`
-	MainChannel    string            `bson:"main_channel"`
-	CounterChannel string            `bson:"counter_channel"`
-	LogsChannel    string            `bson:"logs_channel"`
-	BotChannel     string            `bson:"bot_channel"`
+	GuildID             string            `bson:"guild_id"`
+	Roles               map[string]string `bson:"roles"`
+	LevelRoles          map[string]string `bson:"level_roles"`
+	WelcomeChannel      string            `bson:"welcome_channel"`
+	MainChannel         string            `bson:"main_channel"`
+	CounterChannel      string            `bson:"counter_channel"`
+	LogsChannel         string            `bson:"logs_channel"`
+	BotChannel          string            `bson:"bot_channel"`
+	GalleryForumChannel string            `bson:"gallery_forum_channel"`
+	ArtChannel1         string            `bson:"art_channel_1"`
+	ArtChannel2         string            `bson:"art_channel_2"`
+	ArtChannel3         string            `bson:"art_channel_3"`
 }
 
 type channelCacheEntry struct {
@@ -113,8 +117,36 @@ func GetChannel(guildID, key string) (string, error) {
 		return cfg.LogsChannel, nil
 	case "bot":
 		return cfg.BotChannel, nil
+	case "gallery_forum":
+		return cfg.GalleryForumChannel, nil
+	case "art_1":
+		return cfg.ArtChannel1, nil
+	case "art_2":
+		return cfg.ArtChannel2, nil
+	case "art_3":
+		return cfg.ArtChannel3, nil
 	}
 	return "", nil
+}
+
+func GetArtChannels(guildID string) ([]string, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 7*time.Second)
+	defer cancel()
+
+	var c guildConfig
+	if err := core.DB().Collection("guild_configs").FindOne(ctx, bson.M{"guild_id": guildID}).Decode(&c); err != nil {
+		if err == mongo.ErrNoDocuments {
+			return nil, nil
+		}
+		return nil, err
+	}
+	var channels []string
+	for _, ch := range []string{c.ArtChannel1, c.ArtChannel2, c.ArtChannel3} {
+		if ch != "" {
+			channels = append(channels, ch)
+		}
+	}
+	return channels, nil
 }
 
 func GetLevelRole(guildID string, level int) (string, error) {

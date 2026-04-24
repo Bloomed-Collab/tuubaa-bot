@@ -53,6 +53,10 @@ func init() {
 					{Name: "Counter Channel", Value: "counterchannel"},
 					{Name: "Logs Channel", Value: "logs"},
 					{Name: "Bot Channel", Value: "bot"},
+					{Name: "Gallery Forum", Value: "gallery_forum"},
+					{Name: "Art Channel 1", Value: "art_1"},
+					{Name: "Art Channel 2", Value: "art_2"},
+					{Name: "Art Channel 3", Value: "art_3"},
 				},
 			},
 			{
