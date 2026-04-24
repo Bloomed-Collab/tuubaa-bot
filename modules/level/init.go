@@ -5,6 +5,8 @@ import (
 	"github.com/bwmarrin/discordgo"
 )
 
+var lvlMaxFloat = float64(lvlMax)
+
 func init() {
 	levelCmd := &core.Command{
 		Name:          "level",
@@ -37,6 +39,29 @@ func init() {
 		Handler: topCommandHandler,
 	}
 
+	setLevelCmd := &core.Command{
+		Name:        "setlevel",
+		Description: "Setzt das Level eines Users direkt",
+		AllowAdmin:  true,
+		Options: []*discordgo.ApplicationCommandOption{
+			{
+				Type:        discordgo.ApplicationCommandOptionUser,
+				Name:        "user",
+				Description: "Der User dessen Level gesetzt werden soll",
+				Required:    true,
+			},
+			{
+				Type:        discordgo.ApplicationCommandOptionInteger,
+				Name:        "level",
+				Description: "Level (0–100)",
+				Required:    true,
+				MinValue:    floatPtr(0),
+				MaxValue:    lvlMaxFloat,
+			},
+		},
+		Handler: setLevelHandler,
+	}
+
 	syncCmd := &core.Command{
 		Name:        "synclevels",
 		Description: "Vergibt allen Mitgliedern ihre korrekte Level-Rolle basierend auf ihrem XP",
@@ -46,6 +71,7 @@ func init() {
 
 	_ = core.Register(levelCmd)
 	_ = core.Register(topCmd)
+	_ = core.Register(setLevelCmd)
 	_ = core.Register(syncCmd)
 
 	core.On(topButtonHandler)
