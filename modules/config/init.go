@@ -25,6 +25,7 @@ func init() {
 					{Name: "Meisterentführer", Value: "ROLE_MEISTERENTFUEHRER"},
 					{Name: "Beifahrer", Value: "ROLE_BEIFAHRER"},
 					{Name: "Van Upgrader", Value: "ROLE_VAN_UPGRADER"},
+					{Name: "Join Role", Value: "join_role"},
 				},
 			},
 			{
