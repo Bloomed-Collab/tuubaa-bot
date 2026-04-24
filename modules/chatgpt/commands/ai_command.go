@@ -25,16 +25,10 @@ func AIToggleHandler() func(s *discordgo.Session, i *discordgo.InteractionCreate
 			return respondEphemeral(s, i, "This command can only be used in a guild")
 		}
 
-		db := core.NewMongoHandler()
 		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 		defer cancel()
 
-		if err := db.Connect(ctx); err != nil {
-			return respondEphemeral(s, i, "Database error")
-		}
-		defer db.Disconnect(ctx)
-
-		coll := db.Collection("ai_config")
+		coll := core.DB().Collection("ai_config")
 		var config AIConfig
 		err := coll.FindOne(ctx, bson.M{"guild_id": guildID}).Decode(&config)
 		if err != nil && err != mongo.ErrNoDocuments {
@@ -84,18 +78,11 @@ func AIToggleHandler() func(s *discordgo.Session, i *discordgo.InteractionCreate
 }
 
 func IsAIEnabled(guildID string) (bool, error) {
-	db := core.NewMongoHandler()
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	if err := db.Connect(ctx); err != nil {
-		return false, err
-	}
-	defer db.Disconnect(ctx)
-
-	coll := db.Collection("ai_config")
 	var config AIConfig
-	err := coll.FindOne(ctx, bson.M{"guild_id": guildID}).Decode(&config)
+	err := core.DB().Collection("ai_config").FindOne(ctx, bson.M{"guild_id": guildID}).Decode(&config)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
 			return true, nil

@@ -7,7 +7,6 @@ import (
 	"os"
 	"time"
 
-	"github.com/joho/godotenv"
 	"go.mongodb.org/mongo-driver/v2/mongo"
 	"go.mongodb.org/mongo-driver/v2/mongo/options"
 )
@@ -35,8 +34,6 @@ func NewMongoHandler() *MongoHandler {
 }
 
 func (m *MongoHandler) Connect(ctx context.Context) error {
-	_ = godotenv.Load()
-
 	uri := os.Getenv("MONGO_URI")
 	if uri == "" {
 		uri = os.Getenv("MONGODB_URI")
@@ -99,6 +96,23 @@ func (m *MongoHandler) UpdateOne(ctx context.Context, coll string, filter interf
 
 func (m *MongoHandler) DeleteOne(ctx context.Context, coll string, filter interface{}) (*mongo.DeleteResult, error) {
 	return m.Collection(coll).DeleteOne(ctx, filter)
+}
+
+var globalDB *mongo.Database
+
+func InitDB() error {
+	h := NewMongoHandler()
+	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+	defer cancel()
+	if err := h.Connect(ctx); err != nil {
+		return err
+	}
+	globalDB = h.db
+	return nil
+}
+
+func DB() *mongo.Database {
+	return globalDB
 }
 
 func (m *MongoHandler) EnsureConnected() error {

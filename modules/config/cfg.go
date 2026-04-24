@@ -58,24 +58,15 @@ func GetChannelCached(guildID, key string) (string, error) {
 }
 
 func GetRole(guildID, key string) (string, error) {
-	db := core.NewMongoHandler()
 	ctx, cancel := context.WithTimeout(context.Background(), 7*time.Second)
 	defer cancel()
-	if err := db.Connect(ctx); err != nil {
-		return "", err
-	}
-	defer db.Disconnect(ctx)
 
-	coll := db.Collection("guild_configs")
 	var cfg guildConfig
-	if err := coll.FindOne(ctx, bson.M{"guild_id": guildID}).Decode(&cfg); err != nil {
+	if err := core.DB().Collection("guild_configs").FindOne(ctx, bson.M{"guild_id": guildID}).Decode(&cfg); err != nil {
 		if err == mongo.ErrNoDocuments {
 			return "", nil
 		}
 		return "", err
-	}
-	if cfg.Roles == nil {
-		return "", nil
 	}
 	if v, ok := cfg.Roles[key]; ok {
 		return v, nil
@@ -84,17 +75,11 @@ func GetRole(guildID, key string) (string, error) {
 }
 
 func GetRoles(guildID string) (map[string]string, error) {
-	db := core.NewMongoHandler()
 	ctx, cancel := context.WithTimeout(context.Background(), 7*time.Second)
 	defer cancel()
-	if err := db.Connect(ctx); err != nil {
-		return nil, err
-	}
-	defer db.Disconnect(ctx)
 
-	coll := db.Collection("guild_configs")
 	var cfg guildConfig
-	if err := coll.FindOne(ctx, bson.M{"guild_id": guildID}).Decode(&cfg); err != nil {
+	if err := core.DB().Collection("guild_configs").FindOne(ctx, bson.M{"guild_id": guildID}).Decode(&cfg); err != nil {
 		if err == mongo.ErrNoDocuments {
 			return map[string]string{}, nil
 		}
@@ -107,17 +92,11 @@ func GetRoles(guildID string) (map[string]string, error) {
 }
 
 func GetChannel(guildID, key string) (string, error) {
-	db := core.NewMongoHandler()
 	ctx, cancel := context.WithTimeout(context.Background(), 7*time.Second)
 	defer cancel()
-	if err := db.Connect(ctx); err != nil {
-		return "", err
-	}
-	defer db.Disconnect(ctx)
 
-	coll := db.Collection("guild_configs")
 	var cfg guildConfig
-	if err := coll.FindOne(ctx, bson.M{"guild_id": guildID}).Decode(&cfg); err != nil {
+	if err := core.DB().Collection("guild_configs").FindOne(ctx, bson.M{"guild_id": guildID}).Decode(&cfg); err != nil {
 		if err == mongo.ErrNoDocuments {
 			return "", nil
 		}
@@ -139,17 +118,11 @@ func GetChannel(guildID, key string) (string, error) {
 }
 
 func GetLevelRole(guildID string, level int) (string, error) {
-	db := core.NewMongoHandler()
 	ctx, cancel := context.WithTimeout(context.Background(), 7*time.Second)
 	defer cancel()
-	if err := db.Connect(ctx); err != nil {
-		return "", err
-	}
-	defer db.Disconnect(ctx)
 
-	coll := db.Collection("guild_configs")
 	var cfg guildConfig
-	if err := coll.FindOne(ctx, bson.M{"guild_id": guildID}).Decode(&cfg); err != nil {
+	if err := core.DB().Collection("guild_configs").FindOne(ctx, bson.M{"guild_id": guildID}).Decode(&cfg); err != nil {
 		if err == mongo.ErrNoDocuments {
 			return "", nil
 		}

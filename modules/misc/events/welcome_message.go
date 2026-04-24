@@ -17,21 +17,15 @@ func init() {
 
 func welcomeHandler(s *discordgo.Session, m *discordgo.GuildMemberAdd) {
 	logger.Debug("welcomeHandler: join from user %s in guild %s", m.User.ID, m.GuildID)
-	db := core.NewMongoHandler()
+
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
-	if err := db.Connect(ctx); err != nil {
-		logger.Warn("welcomeHandler: db connect failed: %v", err)
-		return
-	}
-	defer db.Disconnect(ctx)
 
-	coll := db.Collection("guild_configs")
 	var doc struct {
 		WelcomeChannel string `bson:"welcome_channel"`
 		MainChannel    string `bson:"main_channel"`
 	}
-	if err := coll.FindOne(ctx, map[string]interface{}{"guild_id": m.GuildID}).Decode(&doc); err != nil {
+	if err := core.DB().Collection("guild_configs").FindOne(ctx, map[string]interface{}{"guild_id": m.GuildID}).Decode(&doc); err != nil {
 		logger.Debug("welcomeHandler: no config found for guild %s: %v", m.GuildID, err)
 		return
 	}

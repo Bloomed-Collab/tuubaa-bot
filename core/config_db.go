@@ -14,19 +14,11 @@ type guildConfig struct {
 }
 
 func GetGuildIDCore(guildID string) (string, error) {
-	db := NewMongoHandler()
 	ctx, cancel := context.WithTimeout(context.Background(), 7*time.Second)
 	defer cancel()
 
-	if err := db.Connect(ctx); err != nil {
-		return "", err
-	}
-	defer db.Disconnect(ctx)
-
-	coll := db.Collection("guild_configs")
-
 	var cfg guildConfig
-	if err := coll.FindOne(ctx, bson.M{"guild_id": guildID}).Decode(&cfg); err != nil {
+	if err := DB().Collection("guild_configs").FindOne(ctx, bson.M{"guild_id": guildID}).Decode(&cfg); err != nil {
 		if err == mongo.ErrNoDocuments {
 			return "", nil
 		}

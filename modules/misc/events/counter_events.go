@@ -43,18 +43,11 @@ func handleCounterEvent(s *discordgo.Session, guildID string) {
 	lastCounterUpdate[guildID] = time.Now()
 	lastMu.Unlock()
 
-	db := core.NewMongoHandler()
 	ctx, cancel := context.WithTimeout(context.Background(), 8*time.Second)
 	defer cancel()
-	if err := db.Connect(ctx); err != nil {
-		logger.Warn("counter_events: db connect failed: %v", err)
-		return
-	}
-	defer db.Disconnect(ctx)
 
-	coll := db.Collection("guild_configs")
 	var doc bson.M
-	if err := coll.FindOne(ctx, bson.M{"guild_id": guildID}).Decode(&doc); err != nil {
+	if err := core.DB().Collection("guild_configs").FindOne(ctx, bson.M{"guild_id": guildID}).Decode(&doc); err != nil {
 		logger.Debug("counter_events: no config for guild %s: %v", guildID, err)
 		return
 	}

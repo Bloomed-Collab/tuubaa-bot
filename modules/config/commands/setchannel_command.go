@@ -40,17 +40,12 @@ func handleSetChannel(s *discordgo.Session, i *discordgo.InteractionCreate) erro
 		return respond(s, i, "Invalid channel provided")
 	}
 
-	db := core.NewMongoHandler()
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
-	if err := db.Connect(ctx); err != nil {
-		return respond(s, i, fmt.Sprintf("Failed to connect to DB: %v", err))
-	}
-	defer db.Disconnect(ctx)
 
-	coll := db.Collection("guild_configs")
+	coll := core.DB().Collection("guild_configs")
 	filter := bson.M{"guild_id": i.GuildID}
-	var update bson.M
+
 	var fieldName string
 	switch whichKey {
 	case "welcome":
@@ -66,7 +61,8 @@ func handleSetChannel(s *discordgo.Session, i *discordgo.InteractionCreate) erro
 	default:
 		return respond(s, i, "Unknown channel config key")
 	}
-	update = bson.M{"$set": bson.M{fieldName: targetChannelID}}
+
+	update := bson.M{"$set": bson.M{fieldName: targetChannelID}}
 	res, err := coll.UpdateOne(ctx, filter, update)
 	if err != nil {
 		return respond(s, i, fmt.Sprintf("Failed to save config: %v", err))

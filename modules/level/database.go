@@ -18,17 +18,11 @@ type levelEntry struct {
 }
 
 func getXP(userID string) (int64, error) {
-	db := core.NewMongoHandler()
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	if err := db.Connect(ctx); err != nil {
-		return 0, err
-	}
-	defer db.Disconnect(context.Background())
-
 	var entry levelEntry
-	err := db.Collection(lvlCollection).FindOne(ctx, bson.M{"user_id": userID}).Decode(&entry)
+	err := core.DB().Collection(lvlCollection).FindOne(ctx, bson.M{"user_id": userID}).Decode(&entry)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
 			return 0, nil
@@ -40,17 +34,11 @@ func getXP(userID string) (int64, error) {
 }
 
 func getAllXP() ([]levelEntry, error) {
-	db := core.NewMongoHandler()
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	if err := db.Connect(ctx); err != nil {
-		return nil, err
-	}
-	defer db.Disconnect(context.Background())
-
 	opts := options.Find().SetSort(bson.D{{Key: "xp", Value: -1}})
-	cursor, err := db.Collection(lvlCollection).Find(ctx, bson.M{}, opts)
+	cursor, err := core.DB().Collection(lvlCollection).Find(ctx, bson.M{}, opts)
 	if err != nil {
 		return nil, err
 	}
@@ -65,25 +53,14 @@ func getAllXP() ([]levelEntry, error) {
 }
 
 func upsertXP(userID string, xp int64) error {
-	db := core.NewMongoHandler()
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	if err := db.Connect(ctx); err != nil {
-		return err
-	}
-	defer db.Disconnect(context.Background())
-
 	opts := options.UpdateOne().SetUpsert(true)
-	_, err := db.Collection(lvlCollection).UpdateOne(ctx,
+	_, err := core.DB().Collection(lvlCollection).UpdateOne(ctx,
 		bson.M{"user_id": userID},
 		bson.M{"$set": bson.M{"xp": xp}},
 		opts,
 	)
-
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return err
 }

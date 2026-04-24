@@ -19,18 +19,11 @@ func CounterHandler() func(s *discordgo.Session, i *discordgo.InteractionCreate)
 			count = g.ApproximateMemberCount
 		}
 
-		db := core.NewMongoHandler()
 		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 		defer cancel()
-		if err := db.Connect(ctx); err != nil {
-			return respondCounter(s, i, count, false, fmt.Sprintf("DB error: %v", err))
-		}
-		defer db.Disconnect(ctx)
 
-		coll := db.Collection("guild_configs")
-		filter := bson.M{"guild_id": i.GuildID}
 		var doc bson.M
-		if err := coll.FindOne(ctx, filter).Decode(&doc); err != nil {
+		if err := core.DB().Collection("guild_configs").FindOne(ctx, bson.M{"guild_id": i.GuildID}).Decode(&doc); err != nil {
 			return respondCounter(s, i, count, false, "counter channel not configured")
 		}
 

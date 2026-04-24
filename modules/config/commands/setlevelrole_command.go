@@ -37,15 +37,10 @@ func handleSetLevelRole(s *discordgo.Session, i *discordgo.InteractionCreate) er
 		return respond(s, i, "Ungültige Argumente")
 	}
 
-	db := core.NewMongoHandler()
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
-	if err := db.Connect(ctx); err != nil {
-		return respond(s, i, fmt.Sprintf("DB-Verbindung fehlgeschlagen: %v", err))
-	}
-	defer db.Disconnect(ctx)
 
-	coll := db.Collection("guild_configs")
+	coll := core.DB().Collection("guild_configs")
 	filter := bson.M{"guild_id": i.GuildID}
 	update := bson.M{"$set": bson.M{fmt.Sprintf("level_roles.%s", levelStr): targetRoleID}}
 	res, err := coll.UpdateOne(ctx, filter, update)

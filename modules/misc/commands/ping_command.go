@@ -8,6 +8,7 @@ import (
 	"github.com/S42yt/tuubaa-bot/core"
 	v2 "github.com/S42yt/tuubaa-bot/utils/embed"
 	"github.com/bwmarrin/discordgo"
+	"go.mongodb.org/mongo-driver/v2/bson"
 )
 
 func PingHandler() func(s *discordgo.Session, i *discordgo.InteractionCreate) error {
@@ -16,16 +17,12 @@ func PingHandler() func(s *discordgo.Session, i *discordgo.InteractionCreate) er
 		_, chErr := s.Channel(i.ChannelID)
 		botLatency := time.Since(start)
 
-		db := core.NewMongoHandler()
 		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 		defer cancel()
 
 		startDB := time.Now()
-		dbErr := db.Connect(ctx)
+		dbErr := core.DB().RunCommand(ctx, bson.D{{Key: "ping", Value: 1}}).Err()
 		dbLatency := time.Since(startDB)
-		if dbErr == nil {
-			_ = db.Disconnect(ctx)
-		}
 
 		title := v2.NewTextDisplayBuilder().SetContent("### Pong!").Build()
 

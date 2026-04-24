@@ -33,6 +33,11 @@ func main() {
 		logger.Warn(".env file not found, using system environment variables")
 	}
 
+	if err := core.InitDB(); err != nil {
+		logger.Error("failed to connect to database: %v", err)
+		os.Exit(2)
+	}
+
 	token := os.Getenv("TOKEN")
 	if token == "" {
 		token = os.Getenv("DISCORD_TOKEN")

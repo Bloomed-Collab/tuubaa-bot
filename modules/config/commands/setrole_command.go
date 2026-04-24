@@ -38,15 +38,10 @@ func handleSetRole(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 		return respond(s, i, "Invalid arguments")
 	}
 
-	db := core.NewMongoHandler()
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
-	if err := db.Connect(ctx); err != nil {
-		return respond(s, i, fmt.Sprintf("Failed to connect to DB: %v", err))
-	}
-	defer db.Disconnect(ctx)
 
-	coll := db.Collection("guild_configs")
+	coll := core.DB().Collection("guild_configs")
 	filter := bson.M{"guild_id": i.GuildID}
 	update := bson.M{"$set": bson.M{fmt.Sprintf("roles.%s", roleKey): targetRoleID}}
 	res, err := coll.UpdateOne(ctx, filter, update)
@@ -118,19 +113,13 @@ func commandVisibilityFlags(i *discordgo.InteractionCreate) discordgo.MessageFla
 }
 
 func getConfiguredBotChannel(guildID string) (string, error) {
-	db := core.NewMongoHandler()
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-
-	if err := db.Connect(ctx); err != nil {
-		return "", err
-	}
-	defer db.Disconnect(ctx)
 
 	var doc struct {
 		BotChannel string `bson:"bot_channel"`
 	}
-	err := db.Collection("guild_configs").FindOne(ctx, bson.M{"guild_id": guildID}).Decode(&doc)
+	err := core.DB().Collection("guild_configs").FindOne(ctx, bson.M{"guild_id": guildID}).Decode(&doc)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
 			return "", nil
