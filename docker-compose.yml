@@ -16,6 +16,7 @@ services:
   bot:
     build:
       context: .
+      target: bot
     container_name: tuubaa-bot
     restart: unless-stopped
     depends_on:
@@ -28,3 +29,20 @@ services:
       MONGO_URI: mongodb://mongodb:27017
     volumes:
       - ./assets:/app/assets:ro
+
+  migrate:
+    build:
+      context: .
+      target: migrate
+    container_name: tuubaa-migrate
+    restart: no
+    profiles:
+      - migrate
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    environment:
+      MONGO_DB: tuubaa
+      MONGO_URI: mongodb://mongodb:27017
+    volumes:
+      - ./level.json:/app/level.json:ro

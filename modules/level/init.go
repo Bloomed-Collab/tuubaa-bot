@@ -37,8 +37,16 @@ func init() {
 		Handler: topCommandHandler,
 	}
 
+	syncCmd := &core.Command{
+		Name:        "synclevels",
+		Description: "Vergibt allen Mitgliedern ihre korrekte Level-Rolle basierend auf ihrem XP",
+		AllowAdmin:  true,
+		Handler:     syncLevelRolesHandler,
+	}
+
 	_ = core.Register(levelCmd)
 	_ = core.Register(topCmd)
+	_ = core.Register(syncCmd)
 
 	core.On(topButtonHandler)
 }
