@@ -53,7 +53,7 @@ func init() {
 			{
 				Type:        discordgo.ApplicationCommandOptionInteger,
 				Name:        "level",
-				Description: "Level (0–100)",
+				Description: "Level (0–1000)",
 				Required:    true,
 				MinValue:    floatPtr(0),
 				MaxValue:    lvlMaxFloat,
