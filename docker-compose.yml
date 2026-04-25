@@ -29,18 +29,3 @@ services:
       MONGO_URI: mongodb://mongodb:27017
     volumes:
       - ./assets:/app/assets:ro
-
-  migrate:
-    build:
-      context: .
-      target: migrate
-    container_name: tuubaa-migrate
-    restart: "no"
-    depends_on:
-      mongodb:
-        condition: service_healthy
-    environment:
-      MONGO_DB: tuubaa
-      MONGO_URI: mongodb://mongodb:27017
-    volumes:
-      - ./levels.json:/app/levels.json:ro
