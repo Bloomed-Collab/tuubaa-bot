@@ -83,26 +83,29 @@ func topButtonHandler(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		page = 1
 	}
 
+	_ = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+		Type: discordgo.InteractionResponseDeferredMessageUpdate,
+	})
+
 	comps, imgBuf, err := buildTopPage(s, i, page)
 	if err != nil {
 		ulog.Warn("top button: build error: %v", err)
 		return
 	}
 
-	respData := &discordgo.InteractionResponseData{
-		Components: comps,
-		Flags:      discordgo.MessageFlagsIsComponentsV2,
+	edit := &discordgo.WebhookEdit{
+		Components:  &comps,
+		Attachments: &[]*discordgo.MessageAttachment{},
 	}
 	if imgBuf != nil {
-		respData.Files = []*discordgo.File{
+		edit.Files = []*discordgo.File{
 			{Name: "awesome.png", ContentType: "image/png", Reader: imgBuf},
 		}
 	}
 
-	_ = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
-		Type: discordgo.InteractionResponseUpdateMessage,
-		Data: respData,
-	})
+	if _, err := s.FollowupMessageEdit(i.Interaction, i.Message.ID, edit); err != nil {
+		ulog.Warn("top button: edit error: %v", err)
+	}
 }
 
 func buildTopPage(s *discordgo.Session, i *discordgo.InteractionCreate, page int) ([]discordgo.MessageComponent, *bytes.Buffer, error) {
