@@ -20,7 +20,8 @@ const (
 	textWeeklyStart = 1000
 	textWeeklyEnd   = 4000
 
-	dailyXPLimit = int64(800)
+	hourlyXPLimit = int64(100)
+	dailyXPLimit  = int64(800)
 
 	textDeadThreshold   = 10
 	textActiveThreshold = 50

@@ -13,10 +13,33 @@ import (
 var levelRoleThresholds = []int{20, 40, 60, 80, 100}
 
 var (
-	dailyMu   sync.Mutex
-	dailyDate time.Time
+	hourlyMu     sync.Mutex
+	hourlyHour   time.Time
+	hourlyEarned = map[string]int64{}
+
+	dailyMu     sync.Mutex
+	dailyDate   time.Time
 	dailyEarned = map[string]int64{}
 )
+
+func clampToHourlyLimit(userID string, toAdd int64) int64 {
+	hourlyMu.Lock()
+	defer hourlyMu.Unlock()
+	thisHour := time.Now().Truncate(time.Hour)
+	if !hourlyHour.Equal(thisHour) {
+		hourlyHour = thisHour
+		hourlyEarned = map[string]int64{}
+	}
+	earned := hourlyEarned[userID]
+	if earned >= hourlyXPLimit {
+		return 0
+	}
+	if remaining := hourlyXPLimit - earned; toAdd > remaining {
+		toAdd = remaining
+	}
+	hourlyEarned[userID] += toAdd
+	return toAdd
+}
 
 func clampToDailyLimit(userID string, toAdd int64) int64 {
 	dailyMu.Lock()
@@ -42,6 +65,10 @@ func addXP(s *discordgo.Session, guildID, userID string, amount float64) {
 		return
 	}
 	toAdd := int64(math.Floor(amount))
+	if toAdd == 0 {
+		return
+	}
+	toAdd = clampToHourlyLimit(userID, toAdd)
 	if toAdd == 0 {
 		return
 	}

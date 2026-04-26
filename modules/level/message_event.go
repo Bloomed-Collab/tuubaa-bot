@@ -8,16 +8,14 @@ import (
 	"github.com/bwmarrin/discordgo"
 )
 
+const xpCooldown = 60 * time.Second
+
 var (
 	srvTS = newDeque[time.Time]()
 	srvMu sync.Mutex
 
 	usrTS = map[string]*deque[time.Time]{}
 	usrMu sync.Mutex
-
-	anHour = int64(60)
-	aDay   = int64(1440)
-	aWeek  = int64(10080)
 )
 
 func init() {
@@ -36,7 +34,7 @@ func messageXPHandler(s *discordgo.Session, m *discordgo.MessageCreate) {
 	if usrTS[userID] == nil {
 		usrTS[userID] = newDeque[time.Time]()
 	}
-	if last, ok := usrTS[userID].peekAt(0); ok && now.Sub(last) < 10*time.Second {
+	if last, ok := usrTS[userID].peekAt(0); ok && now.Sub(last) < xpCooldown {
 		usrMu.Unlock()
 		return
 	}
@@ -45,30 +43,21 @@ func messageXPHandler(s *discordgo.Session, m *discordgo.MessageCreate) {
 
 	srvMu.Lock()
 	srvTS.pushFront(now)
-	srvMu.Unlock()
-
-	srvMu.Lock()
 	for {
 		last, ok := srvTS.peekBack()
-		if !ok || last.UnixMilli() >= now.UnixMilli()-anHour {
+		if !ok || now.Sub(last) <= time.Hour {
 			break
 		}
 		_, _ = srvTS.popBack()
 	}
-	serverHour := 0
-	for idx := 0; idx < srvTS.size(); idx++ {
-		if ts, ok := srvTS.peekAt(idx); ok && ts.UnixMilli() > now.UnixMilli()-anHour {
-			serverHour = idx
-			break
-		}
-	}
+	serverHour := srvTS.size()
 	srvMu.Unlock()
 
 	usrMu.Lock()
 	for _, q := range usrTS {
 		for {
 			last, ok := q.peekBack()
-			if !ok || last.UnixMilli() >= now.UnixMilli()-aDay {
+			if !ok || now.Sub(last) <= 7*24*time.Hour {
 				break
 			}
 			_, _ = q.popBack()
@@ -80,14 +69,15 @@ func messageXPHandler(s *discordgo.Session, m *discordgo.MessageCreate) {
 		for idx := 0; idx < q.size(); idx++ {
 			ts, ok := q.peekAt(idx)
 			if !ok {
-				continue
-			}
-			if userDaily == 0 && ts.UnixMilli() > now.UnixMilli()-aDay {
-				userDaily = idx
-			}
-			if ts.UnixMilli() > now.UnixMilli()-aWeek {
-				userWeekly = idx
 				break
+			}
+			age := now.Sub(ts)
+			if age > 7*24*time.Hour {
+				break
+			}
+			userWeekly++
+			if age <= 24*time.Hour {
+				userDaily++
 			}
 		}
 	}
