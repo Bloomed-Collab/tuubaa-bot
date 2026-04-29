@@ -57,7 +57,7 @@ func SetRainbowActive(userID, guildID string, active bool) error {
 		update["$setOnInsert"] = bson.M{"current_index": 0}
 	}
 
-	opts := options.Update().SetUpsert(true)
+	opts := options.UpdateOne().SetUpsert(true)
 	_, err := coll.UpdateOne(ctx, filter, update, opts)
 	return err
 }
@@ -129,13 +129,13 @@ func updateMemberRole(s *discordgo.Session, guildID, userID string, oldIndex, ne
 		return fmt.Errorf("failed to get roles: %w", err)
 	}
 
-	oldRoleName := SelectableRoles[oldIndex]
+	//oldRoleName := SelectableRoles[oldIndex]
 	newRoleName := SelectableRoles[newIndex]
 
-	oldRoleKey := ChoiceKey[oldRoleName]
+	//oldRoleKey := ChoiceKey[oldRoleName]
 	newRoleKey := ChoiceKey[newRoleName]
 
-	oldRoleID := rolesMap[oldRoleKey]
+	//oldRoleID := rolesMap[oldRoleKey]
 	newRoleID := rolesMap[newRoleKey]
 
 	if newRoleID == "" {
