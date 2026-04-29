@@ -3,6 +3,7 @@ package booster
 import (
 	"github.com/S42yt/tuubaa-bot/core"
 	"github.com/S42yt/tuubaa-bot/modules/booster/command"
+	"github.com/S42yt/tuubaa-bot/modules/booster/event"
 	"github.com/bwmarrin/discordgo"
 )
 
@@ -21,6 +22,7 @@ func init() {
 				{Name: "Meisterentführer", Value: "Meisterentführer"},
 				{Name: "Beifahrer", Value: "Beifahrer"},
 				{Name: "Van Upgrader", Value: "Van Upgrader"},
+				{Name: "Rainbow", Value: "Rainbow"},
 			},
 		},
 	}
@@ -34,4 +36,8 @@ func init() {
 	}
 
 	_ = core.Register(farbenCmd)
+
+	core.On(func(s *discordgo.Session, r *discordgo.Ready) {
+		event.StartRainbowLoop(s)
+	})
 }
