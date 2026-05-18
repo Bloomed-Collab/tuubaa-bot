@@ -24,18 +24,12 @@ func reactionAddHandler(s *discordgo.Session, r *discordgo.MessageReactionAdd) {
 	if err != nil || msg.Author == nil {
 		return
 	}
-	if r.UserID != msg.Author.ID {
-		return
-	}
 
 	var imageURLs []string
 	for _, a := range msg.Attachments {
-		if strings.HasPrefix(a.ContentType, "image/") || isImageURL(a.URL) {
+		if strings.HasPrefix(a.ContentType, "image/") || strings.HasPrefix(a.ContentType, "video/mp4") || isImageURL(a.URL) {
 			imageURLs = append(imageURLs, a.URL)
 		}
-	}
-	if len(imageURLs) == 0 {
-		return
 	}
 
 	existing, err := getPost(r.GuildID, r.ChannelID, r.MessageID)
@@ -44,6 +38,15 @@ func reactionAddHandler(s *discordgo.Session, r *discordgo.MessageReactionAdd) {
 		return
 	}
 	if existing != nil {
+		updateGalleryStarCount(s, msg, existing)
+		return
+	}
+
+	// Only the message author starring their own post creates a new gallery entry
+	if r.UserID != msg.Author.ID {
+		return
+	}
+	if len(imageURLs) == 0 {
 		return
 	}
 
@@ -137,5 +140,5 @@ func isImageURL(url string) bool {
 	l := strings.ToLower(url)
 	return strings.HasSuffix(l, ".jpg") || strings.HasSuffix(l, ".jpeg") ||
 		strings.HasSuffix(l, ".png") || strings.HasSuffix(l, ".gif") ||
-		strings.HasSuffix(l, ".webp")
+		strings.HasSuffix(l, ".webp") || strings.HasSuffix(l, ".mp4")
 }

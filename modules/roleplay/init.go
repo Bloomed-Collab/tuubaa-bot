@@ -40,6 +40,7 @@ func init() {
 	}
 
 	var options []*discordgo.ApplicationCommandOption
+	var reactionChoices []*discordgo.ApplicationCommandOptionChoice
 	for _, sc := range subcommands {
 		options = append(options, &discordgo.ApplicationCommandOption{
 			Type:        discordgo.ApplicationCommandOptionSubCommand,
@@ -53,6 +54,10 @@ func init() {
 					Required:    false,
 				},
 			},
+		})
+		reactionChoices = append(reactionChoices, &discordgo.ApplicationCommandOptionChoice{
+			Name:  sc.Name,
+			Value: sc.Name,
 		})
 	}
 
@@ -92,4 +97,38 @@ func init() {
 	}
 
 	_ = core.Register(cookieCmd)
+
+	switchAPICmd := &core.Command{
+		Name:          "switchapi",
+		Description:   "Switch the roleplay GIF API between OtakuGIFs and Bastiwood (Admin only)",
+		AllowAdmin:    true,
+		AllowEveryone: false,
+		Handler:       commands.SwitchAPIHandler(),
+	}
+
+	_ = core.Register(switchAPICmd)
+
+	setGifCmd := &core.Command{
+		Name:        "setgif",
+		Description: "Set GIF URL for a roleplay reaction in Basti API",
+		AllowAdmin:  true,
+		Options: []*discordgo.ApplicationCommandOption{
+			{
+				Type:        discordgo.ApplicationCommandOptionString,
+				Name:        "reaction",
+				Description: "Pick one reaction",
+				Required:    true,
+				Choices:     reactionChoices,
+			},
+			{
+				Type:        discordgo.ApplicationCommandOptionString,
+				Name:        "url",
+				Description: "GIF URL to store",
+				Required:    true,
+			},
+		},
+		Handler: commands.SetGifHandler(),
+	}
+
+	_ = core.Register(setGifCmd)
 }
