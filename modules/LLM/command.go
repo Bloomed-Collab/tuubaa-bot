@@ -34,22 +34,13 @@ func registerCommands() {
 					},
 				},
 			},
-			{
-				Type:        discordgo.ApplicationCommandOptionSubCommand,
-				Name:        "ask",
-				Description: "Ask the LLM a question directly",
-				Options: []*discordgo.ApplicationCommandOption{
-					{
-						Type:        discordgo.ApplicationCommandOptionString,
-						Name:        "message",
-						Description: "Your message",
-						Required:    true,
-					},
-				},
-			},
 		},
 		Handler: func(s *discordgo.Session, i *discordgo.InteractionCreate) error {
-			sub := i.ApplicationCommandData().Options[0]
+			options := i.ApplicationCommandData().Options
+			if len(options) == 0 {
+				return respond(s, i, "Missing subcommand.")
+			}
+			sub := options[0]
 			switch sub.Name {
 			case "load":
 				if err := loadLLM(); err != nil {
@@ -64,19 +55,6 @@ func registerCommands() {
 			case "prompt":
 				setprompt(sub.Options[0].StringValue())
 				return respond(s, i, "Prompt set.")
-			case "ask":
-				// Defer immediately — LLM calls can be slow
-				s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
-					Type: discordgo.InteractionResponseDeferredChannelMessageWithSource,
-				})
-				reply, err := getmessage(sub.Options[0].StringValue())
-				if err != nil {
-					content := "Error: " + err.Error()
-					s.InteractionResponseEdit(i.Interaction, &discordgo.WebhookEdit{Content: &content})
-					return nil
-				}
-				s.InteractionResponseEdit(i.Interaction, &discordgo.WebhookEdit{Content: &reply})
-				return nil
 			}
 			return respond(s, i, "Unknown subcommand.")
 		},
