@@ -7,6 +7,7 @@ var queue = make(chan queueItem, 100)
 type queueItem struct {
 	s         *discordgo.Session
 	channelID string
+	messageID string
 	message   string
 }
 
@@ -16,10 +17,24 @@ func startWorker() {
 		for item := range queue {
 			reply, err := getmessage(item.message)
 			if err != nil {
-				item.s.ChannelMessageSend(item.channelID, "Error: "+err.Error())
+				_, _ = item.s.ChannelMessageSendComplex(item.channelID, &discordgo.MessageSend{
+					Content: "Error: " + err.Error(),
+					Reference: &discordgo.MessageReference{
+						MessageID: item.messageID,
+						ChannelID: item.channelID,
+					},
+					AllowedMentions: &discordgo.MessageAllowedMentions{RepliedUser: true},
+				})
 				continue
 			}
-			item.s.ChannelMessageSend(item.channelID, reply)
+			_, _ = item.s.ChannelMessageSendComplex(item.channelID, &discordgo.MessageSend{
+				Content: reply,
+				Reference: &discordgo.MessageReference{
+					MessageID: item.messageID,
+					ChannelID: item.channelID,
+				},
+				AllowedMentions: &discordgo.MessageAllowedMentions{RepliedUser: true},
+			})
 		}
 	}()
 }

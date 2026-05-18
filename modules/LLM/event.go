@@ -40,7 +40,7 @@ func messageHandler(s *discordgo.Session, m *discordgo.MessageCreate) {
 	}
 
 	select {
-	case queue <- queueItem{s, m.ChannelID, content}:
+	case queue <- queueItem{s: s, channelID: m.ChannelID, messageID: m.ID, message: content}:
 	default:
 		s.ChannelMessageSend(m.ChannelID, "I'm busy, please try again in a moment.")
 	}
