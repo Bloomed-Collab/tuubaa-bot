@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"math/rand"
 	"net/http"
 	"net/url"
 	"os"
@@ -14,14 +15,22 @@ import (
 )
 
 // ----------------//
-var BAPI int = 0
+type APItype int
 
-func GetBAPI() int {
-	return BAPI
+const (
+	OTAKU APItype = iota // 0
+	BASTI                // 1
+	BOTH                 // 2
+)
+
+var API APItype = 0
+
+func GetAPItype() APItype {
+	return API
 }
 
-func SetBAPI(api int) {
-	BAPI = api
+func SetAPItype(api APItype) {
+	API = api
 }
 
 // ----------------//
@@ -47,8 +56,13 @@ func GetGifURL(kind string) (string, error) {
 	var reqURL string
 	var req *http.Request
 	var err error
-
-	if BAPI == 1 {
+	if API == OTAKU {
+		reqURL = fmt.Sprintf("https://api.otakugifs.xyz/gif?reaction=%s", kind)
+		req, err = http.NewRequest(http.MethodGet, reqURL, nil)
+		if err != nil {
+			return "", err
+		}
+	} else if API == BASTI {
 		key, keyErr := getBastiAPIKey()
 		if keyErr != nil {
 			return "", keyErr
@@ -56,14 +70,30 @@ func GetGifURL(kind string) (string, error) {
 		reqURL = fmt.Sprintf("https://api.bastiwood.com/reaction/%s", url.PathEscape(kind))
 		req, err = http.NewRequest(http.MethodGet, reqURL, nil)
 		if err != nil {
+			API = OTAKU
 			return "", err
 		}
 		applyBastiAuthHeaders(req, key)
-	} else {
-		reqURL = fmt.Sprintf("https://api.otakugifs.xyz/gif?reaction=%s", kind)
-		req, err = http.NewRequest(http.MethodGet, reqURL, nil)
-		if err != nil {
-			return "", err
+	} else if API == BOTH {
+		var randAPI int = rand.Intn(2)
+		if randAPI == 0 {
+			reqURL = fmt.Sprintf("https://api.otakugifs.xyz/gif?reaction=%s", kind)
+			req, err = http.NewRequest(http.MethodGet, reqURL, nil)
+			if err != nil {
+				return "", err
+			}
+		} else {
+			key, keyErr := getBastiAPIKey()
+			if keyErr != nil {
+				return "", keyErr
+			}
+			reqURL = fmt.Sprintf("https://api.bastiwood.com/reaction/%s", url.PathEscape(kind))
+			req, err = http.NewRequest(http.MethodGet, reqURL, nil)
+			if err != nil {
+				API = OTAKU
+				return "", err
+			}
+			applyBastiAuthHeaders(req, key)
 		}
 	}
 	ulog.Debug("Fetching GIF for kind=%s url=%s", kind, reqURL)

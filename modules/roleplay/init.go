@@ -103,7 +103,20 @@ func init() {
 		Description:   "Switch the roleplay GIF API between OtakuGIFs and Bastiwood (Admin only)",
 		AllowAdmin:    true,
 		AllowEveryone: false,
-		Handler:       commands.SwitchAPIHandler(),
+		Options: []*discordgo.ApplicationCommandOption{
+			{
+				Type:        discordgo.ApplicationCommandOptionString,
+				Name:        "api",
+				Description: "Which API to use",
+				Required:    true,
+				Choices: []*discordgo.ApplicationCommandOptionChoice{
+					{Name: "Otaku", Value: "Otaku"},
+					{Name: "Basti", Value: "Basti"},
+					{Name: "Both", Value: "Both"},
+				},
+			},
+		},
+		Handler: commands.SwitchAPIHandler(),
 	}
 
 	_ = core.Register(switchAPICmd)

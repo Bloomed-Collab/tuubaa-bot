@@ -7,13 +7,27 @@ import (
 
 func SwitchAPIHandler() func(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 	return func(s *discordgo.Session, i *discordgo.InteractionCreate) error {
+		data := i.ApplicationCommandData()
+		if len(data.Options) == 0 {
+			return s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+				Type: discordgo.InteractionResponseChannelMessageWithSource,
+				Data: &discordgo.InteractionResponseData{Content: "Please provide an API choice."},
+			})
+		}
+		choice := data.Options[0].StringValue()
 		var msg string
-		if api.GetBAPI() == 1 {
-			api.SetBAPI(0)
+		switch choice {
+		case "Otaku":
+			api.SetAPItype(api.OTAKU)
 			msg = "Switched to OtakuGIFs API."
-		} else {
-			api.SetBAPI(1)
+		case "Basti":
+			api.SetAPItype(api.BASTI)
 			msg = "Switched to Bastiwood API."
+		case "Both":
+			api.SetAPItype(api.BOTH)
+			msg = "Switched to Both APIs (random)."
+		default:
+			msg = "Unknown API choice."
 		}
 		return s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 			Type: discordgo.InteractionResponseChannelMessageWithSource,
