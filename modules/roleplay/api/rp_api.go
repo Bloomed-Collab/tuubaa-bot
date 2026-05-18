@@ -3,8 +3,11 @@ package api
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
+	"net/url"
+	"os"
 	"time"
 
 	ulog "github.com/S42yt/tuubaa-bot/utils/logger"
@@ -26,18 +29,46 @@ type gifResponse struct {
 	URL string `json:"url"`
 }
 
+func getBastiAPIKey() (string, error) {
+	key := os.Getenv("BASTIAPI")
+	if key == "" {
+		return "", errors.New("BASTIAPI is not set")
+	}
+	return key, nil
+}
+
+func applyBastiAuthHeaders(req *http.Request, key string) {
+	req.Header.Set("X-API-Key", key)
+	req.Header.Set("Authorization", "Bearer "+key)
+}
+
 func GetGifURL(kind string) (string, error) {
 	cli := &http.Client{Timeout: 8 * time.Second}
-	var url string
+	var reqURL string
+	var req *http.Request
+	var err error
 
 	if BAPI == 1 {
-		url = fmt.Sprintf("https://api.bastiwood.com/reactions/%s/Musaskey", kind)
+		key, keyErr := getBastiAPIKey()
+		if keyErr != nil {
+			return "", keyErr
+		}
+		reqURL = fmt.Sprintf("https://api.bastiwood.com/reaction/%s", url.PathEscape(kind))
+		req, err = http.NewRequest(http.MethodGet, reqURL, nil)
+		if err != nil {
+			return "", err
+		}
+		applyBastiAuthHeaders(req, key)
 	} else {
-		url = fmt.Sprintf("https://api.otakugifs.xyz/gif?reaction=%s", kind)
+		reqURL = fmt.Sprintf("https://api.otakugifs.xyz/gif?reaction=%s", kind)
+		req, err = http.NewRequest(http.MethodGet, reqURL, nil)
+		if err != nil {
+			return "", err
+		}
 	}
-	ulog.Debug("Fetching GIF for kind=%s url=%s", kind, url)
+	ulog.Debug("Fetching GIF for kind=%s url=%s", kind, reqURL)
 
-	resp, err := cli.Get(url)
+	resp, err := cli.Do(req)
 	if err != nil {
 		ulog.Error("GetGifURL: HTTP get failed for kind=%s: %v", kind, err)
 		return "", err
@@ -60,16 +91,22 @@ func GetGifURL(kind string) (string, error) {
 
 func SetGifURL(reaction, gifURL string) error {
 	cli := &http.Client{Timeout: 8 * time.Second}
+	key, err := getBastiAPIKey()
+	if err != nil {
+		return err
+	}
+
 	body, err := json.Marshal(map[string]string{"url": gifURL})
 	if err != nil {
 		return err
 	}
 
-	req, err := http.NewRequest(http.MethodPost, fmt.Sprintf("https://api.bastiwood.com/setGif/%s", reaction), bytes.NewReader(body))
+	req, err := http.NewRequest(http.MethodPost, fmt.Sprintf("https://api.bastiwood.com/setreaction/%s", reaction), bytes.NewReader(body))
 	if err != nil {
 		return err
 	}
 	req.Header.Set("Content-Type", "application/json")
+	applyBastiAuthHeaders(req, key)
 
 	resp, err := cli.Do(req)
 	if err != nil {

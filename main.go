@@ -7,7 +7,7 @@ import (
 	"syscall"
 	"time"
 
-	_ "github.com/Basti-Wood/tuubaa-bot/modules/LLM"
+	_ "github.com/S42yt/tuubaa-bot/modules/LLM"
 	"github.com/S42yt/tuubaa-bot/core"
 	_ "github.com/S42yt/tuubaa-bot/modules/booster"
 	_ "github.com/S42yt/tuubaa-bot/modules/gallery"
