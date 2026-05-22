@@ -27,7 +27,7 @@ func reactionAddHandler(s *discordgo.Session, r *discordgo.MessageReactionAdd) {
 
 	var imageURLs []string
 	for _, a := range msg.Attachments {
-		if strings.HasPrefix(a.ContentType, "image/") || strings.HasPrefix(a.ContentType, "video/mp4") || isImageURL(a.URL) {
+		if strings.HasPrefix(a.ContentType, "image/") || strings.HasPrefix(a.ContentType, "video/mp4") || isMediaURL(a.URL) {
 			imageURLs = append(imageURLs, a.URL)
 		}
 	}
@@ -136,7 +136,7 @@ func containsStr(slice []string, s string) bool {
 	return false
 }
 
-func isImageURL(url string) bool {
+func isMediaURL(url string) bool {
 	l := strings.ToLower(url)
 	return strings.HasSuffix(l, ".jpg") || strings.HasSuffix(l, ".jpeg") ||
 		strings.HasSuffix(l, ".png") || strings.HasSuffix(l, ".gif") ||

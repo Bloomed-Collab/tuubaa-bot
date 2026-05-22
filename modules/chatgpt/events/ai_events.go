@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/S42yt/tuubaa-bot/core"
-	"github.com/S42yt/tuubaa-bot/modules/chatgpt/commands"
 	"github.com/S42yt/tuubaa-bot/modules/chatgpt/handler"
 	ulog "github.com/S42yt/tuubaa-bot/utils/logger"
 	"github.com/bwmarrin/discordgo"
@@ -59,17 +58,6 @@ func messageCreateHandler(s *discordgo.Session, m *discordgo.MessageCreate) {
 		return
 	}
 	ulog.Debug("[AI] Bot mentioned! Guild: %s, Channel: %s, Author: %s", m.GuildID, m.ChannelID, m.Author.Username)
-
-	enabled, err := commands.IsAIEnabled(m.GuildID)
-	if err != nil {
-		ulog.Warn("[AI] Error checking AI status: %v", err)
-		return
-	}
-	ulog.Debug("[AI] AI Enabled for guild: %v", enabled)
-	if !enabled {
-		ulog.Debug("[AI] AI is disabled for this guild")
-		return
-	}
 
 	prompt := extractPrompt(s.State.User.ID, m.Content)
 	ulog.Debug("[AI] Extracted prompt: %s", prompt)
@@ -125,7 +113,7 @@ func extractPrompt(botID string, content string) string {
 }
 
 func sendSelfDeletingMessage(s *discordgo.Session, channelID string, content string) {
-	
+
 	ulog.Debug("[AI] sendSelfDeletingMessage called with content length: %d", len(content))
 	if len(content) > 2000 {
 		ulog.Warn("[AI] Self-deleting message truncated from %d to 2000 chars", len(content))
@@ -140,5 +128,5 @@ func sendSelfDeletingMessage(s *discordgo.Session, channelID string, content str
 	}
 	ulog.Debug("[AI] Self-deleting message sent successfully")
 	time.Sleep(2 * time.Second)
-    s.ChannelMessageDelete(channelID, msg.ID)
+	s.ChannelMessageDelete(channelID, msg.ID)
 }

@@ -16,6 +16,14 @@ func SwitchAPIHandler() func(s *discordgo.Session, i *discordgo.InteractionCreat
 		}
 		choice := data.Options[0].StringValue()
 		var msg string
+		if !api.IsBastiAvailable() && (choice != "Otaku") {
+			api.SetAPItype(api.OTAKU)
+			msg = "Basti API is not available, defaulting to OtakuGIFs API."
+			return s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+				Type: discordgo.InteractionResponseChannelMessageWithSource,
+				Data: &discordgo.InteractionResponseData{Content: msg},
+			})
+		}
 		switch choice {
 		case "Otaku":
 			api.SetAPItype(api.OTAKU)

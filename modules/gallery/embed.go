@@ -44,7 +44,7 @@ func updateGalleryStarCount(s *discordgo.Session, msg *discordgo.Message, post *
 
 	var imageURLs []string
 	for _, a := range msg.Attachments {
-		if strings.HasPrefix(a.ContentType, "image/") || strings.HasPrefix(a.ContentType, "video/mp4") || isImageURL(a.URL) {
+		if strings.HasPrefix(a.ContentType, "image/") || strings.HasPrefix(a.ContentType, "video/mp4") || isMediaURL(a.URL) {
 			imageURLs = append(imageURLs, a.URL)
 		}
 	}

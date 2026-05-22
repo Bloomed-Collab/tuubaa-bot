@@ -33,6 +33,11 @@ func SetAPItype(api APItype) {
 	API = api
 }
 
+func IsBastiAvailable() bool {
+	_, err := getBastiAPIKey()
+	return err == nil
+}
+
 // ----------------//
 type gifResponse struct {
 	URL string `json:"url"`

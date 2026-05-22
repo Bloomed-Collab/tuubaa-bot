@@ -12,14 +12,6 @@ func init() {
 	handler.StartWorker()
 
 	_ = core.Register(&core.Command{
-		Name:        "ai",
-		Description: "Toggle AI responses on/off",
-		Options:     nil,
-		AllowAdmin:  true,
-		Handler:     commands.AIToggleHandler(),
-	})
-
-	_ = core.Register(&core.Command{
 		Name:        "changeai",
 		Description: "Switch the active AI backend",
 		AllowAdmin:  true,
