@@ -7,12 +7,10 @@ import (
 	"syscall"
 	"time"
 
-	_ "github.com/S42yt/tuubaa-bot/modules/LLM"
+	_ "github.com/S42yt/tuubaa-bot/modules/chatgpt"
 	"github.com/S42yt/tuubaa-bot/core"
 	_ "github.com/S42yt/tuubaa-bot/modules/booster"
 	_ "github.com/S42yt/tuubaa-bot/modules/gallery"
-
-	//_ "github.com/S42yt/tuubaa-bot/modules/chatgpt"
 	_ "github.com/S42yt/tuubaa-bot/modules/config"
 	_ "github.com/S42yt/tuubaa-bot/modules/level"
 	_ "github.com/S42yt/tuubaa-bot/modules/misc"
