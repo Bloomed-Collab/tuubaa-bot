@@ -18,6 +18,28 @@ func init() {
 func welcomeHandler(s *discordgo.Session, m *discordgo.GuildMemberAdd) {
 	logger.Debug("welcomeHandler: join from user %s in guild %s", m.User.ID, m.GuildID)
 
+	const minAge = 60 * 24 * time.Hour // 2 months
+	createdAt, err := discordgo.SnowflakeTimestamp(m.User.ID)
+	if err != nil {
+		logger.Warn("welcomeHandler: failed to parse snowflake for %s: %v", m.User.ID, err)
+	} else if time.Since(createdAt) < minAge {
+		ageDays := int(time.Since(createdAt).Hours() / 24)
+		logger.Debug("welcomeHandler: account %s too new (%d days), sending DM and skipping welcome", m.User.ID, ageDays)
+		if ch, dmErr := s.UserChannelCreate(m.User.ID); dmErr != nil {
+			logger.Warn("welcomeHandler: failed to create DM channel for %s: %v", m.User.ID, dmErr)
+		} else if _, sendErr := s.ChannelMessageSend(ch.ID, "Dein Discord Account ist leider noch nicht alt genug, um dem Server beizutreten. Bitte versuche es erneut, wenn dein Account mindestens 2 Monate alt ist."); sendErr != nil {
+			logger.Warn("welcomeHandler: failed to send DM to %s: %v", m.User.ID, sendErr)
+		}
+		return
+	}
+
+	time.Sleep(5 * time.Second)
+
+	if _, err := s.GuildMember(m.GuildID, m.User.ID); err != nil {
+		logger.Debug("welcomeHandler: member %s no longer in guild after sleep, skipping welcome", m.User.ID)
+		return
+	}
+
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
