@@ -2,6 +2,7 @@ package ticket
 
 import (
 	"fmt"
+	"time"
 
 	cfg "github.com/S42yt/tuubaa-bot/modules/config"
 	logger "github.com/S42yt/tuubaa-bot/utils/logger"
@@ -112,6 +113,7 @@ func handleCreate(s *discordgo.Session, i *discordgo.InteractionCreate, sub *dis
 		MessageID: msgID,
 		UserID:    targetUser.ID,
 		Kind:      "support",
+		OpenedAt:  time.Now(),
 	})
 
 	editResponse(s, i, fmt.Sprintf("✅ Ticket erstellt: <#%s>", ch.ID))

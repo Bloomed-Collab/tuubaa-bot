@@ -13,12 +13,13 @@ import (
 const colTickets = "tickets"
 
 type ticketEntry struct {
-	GuildID   string `bson:"guild_id"`
-	ChannelID string `bson:"channel_id"`
-	MessageID string `bson:"message_id"`
-	UserID    string `bson:"user_id"`
-	Kind      string `bson:"kind"`
-	ClaimedBy string `bson:"claimed_by,omitempty"`
+	GuildID   string    `bson:"guild_id"`
+	ChannelID string    `bson:"channel_id"`
+	MessageID string    `bson:"message_id"`
+	UserID    string    `bson:"user_id"`
+	Kind      string    `bson:"kind"`
+	ClaimedBy string    `bson:"claimed_by,omitempty"`
+	OpenedAt  time.Time `bson:"opened_at"`
 }
 
 func saveTicket(t ticketEntry) error {

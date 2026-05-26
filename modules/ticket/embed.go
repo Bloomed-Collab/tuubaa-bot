@@ -2,6 +2,7 @@ package ticket
 
 import (
 	"fmt"
+	"time"
 
 	v2 "github.com/S42yt/tuubaa-bot/utils/embed"
 	"github.com/bwmarrin/discordgo"
@@ -153,6 +154,43 @@ func buildKunstConfirmMessage(userID string) *discordgo.MessageSend {
 	container.AddComponent(v2.NewTextDisplayBuilder().SetContent(
 		fmt.Sprintf("<@%s>! Du hast erfolgreich die Künstler Rolle erhalten :D", userID),
 	).Build())
+	return &discordgo.MessageSend{
+		Components: []discordgo.MessageComponent{container.Build()},
+		Flags:      discordgo.MessageFlagsIsComponentsV2,
+	}
+}
+
+func buildTicketLogMessage(t *ticketEntry, openedByName, closedByName, closedByID string, closedAt time.Time) *discordgo.MessageSend {
+	k := ticketKinds[t.Kind]
+	if k.title == "" {
+		k = ticketKinds["support"]
+	}
+
+	container := v2.NewContainerBuilder().SetAccentColor(k.color)
+	container.AddComponent(v2.NewTextDisplayBuilder().SetContent(
+		fmt.Sprintf("## 📋 Ticket Log — %s %s", k.icon, k.title),
+	).Build())
+	container.AddComponent(v2.NewTextDisplayBuilder().SetContent(
+		fmt.Sprintf(
+			"**Geöffnet von:** <@%s> (`%s`)\n"+
+				"**Geöffnet am:** %s\n"+
+				"**Geschlossen von:** <@%s> (`%s`)\n"+
+				"**Geschlossen am:** %s",
+			t.UserID, openedByName,
+			t.OpenedAt.Format("02.01.2006 um 15:04 Uhr"),
+			closedByID, closedByName,
+			closedAt.Format("02.01.2006 um 15:04 Uhr"),
+		),
+	).Build())
+	if t.ClaimedBy != "" {
+		container.AddComponent(v2.NewTextDisplayBuilder().SetContent(
+			fmt.Sprintf("**Geclaimed von:** <@%s>", t.ClaimedBy),
+		).Build())
+	}
+	container.AddComponent(v2.NewTextDisplayBuilder().SetContent(
+		"-# Die Transcript-Dateien findest du unten angehängt (.txt & .html)",
+	).Build())
+
 	return &discordgo.MessageSend{
 		Components: []discordgo.MessageComponent{container.Build()},
 		Flags:      discordgo.MessageFlagsIsComponentsV2,

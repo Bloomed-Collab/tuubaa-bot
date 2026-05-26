@@ -1,7 +1,9 @@
 package ticket
 
 import (
+	"bytes"
 	"fmt"
+	"time"
 
 	cfg "github.com/S42yt/tuubaa-bot/modules/config"
 	logger "github.com/S42yt/tuubaa-bot/utils/logger"
@@ -165,6 +167,7 @@ func openTicket(s *discordgo.Session, i *discordgo.InteractionCreate, kind strin
 		MessageID: msgID,
 		UserID:    i.Member.User.ID,
 		Kind:      kind,
+		OpenedAt:  time.Now(),
 	}); err != nil {
 		logger.Warn("ticket: saveTicket: %v", err)
 	}
@@ -212,8 +215,7 @@ func handleClose(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	})
 
 	if hasTeamRole(i.GuildID, i.Member) {
-		deleteTicket(i.GuildID, i.ChannelID)
-		s.ChannelDelete(i.ChannelID) //nolint:errcheck
+		closeAndLogTicket(s, i.GuildID, i.ChannelID, i.Member.User.ID)
 		return
 	}
 
@@ -230,8 +232,39 @@ func handleCloseConfirm(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		Type: discordgo.InteractionResponseDeferredMessageUpdate,
 	})
 
-	deleteTicket(i.GuildID, i.ChannelID)
-	s.ChannelDelete(i.ChannelID) //nolint:errcheck
+	closeAndLogTicket(s, i.GuildID, i.ChannelID, i.Member.User.ID)
+}
+
+func closeAndLogTicket(s *discordgo.Session, guildID, channelID, closedByID string) {
+	t, _ := getTicket(guildID, channelID)
+
+	logChannelID, _ := cfg.GetChannel(guildID, "ticket_log")
+	if logChannelID != "" && t != nil {
+		closedAt := time.Now()
+		closedByName := resolveDisplayName(s, guildID, closedByID)
+		openedByName := resolveDisplayName(s, guildID, t.UserID)
+
+		msgs, err := fetchMessages(s, channelID)
+		if err != nil {
+			logger.Warn("ticket: fetch messages for log: %v", err)
+		}
+
+		txtData := buildTXT(msgs)
+		htmlData := buildHTML(msgs, t.Kind, openedByName, t.OpenedAt, closedByName, closedAt)
+
+		logMsg := buildTicketLogMessage(t, openedByName, closedByName, closedByID, closedAt)
+		logMsg.Files = []*discordgo.File{
+			{Name: "transcript.txt", Reader: bytes.NewReader(txtData)},
+			{Name: "transcript.html", Reader: bytes.NewReader(htmlData)},
+		}
+
+		if _, err := s.ChannelMessageSendComplex(logChannelID, logMsg); err != nil {
+			logger.Warn("ticket: send log message: %v", err)
+		}
+	}
+
+	deleteTicket(guildID, channelID)
+	s.ChannelDelete(channelID) //nolint:errcheck
 }
 
 func handleKunstConfirm(s *discordgo.Session, i *discordgo.InteractionCreate) {
