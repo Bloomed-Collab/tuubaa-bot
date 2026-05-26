@@ -14,6 +14,7 @@ import (
 	_ "github.com/S42yt/tuubaa-bot/modules/config"
 	_ "github.com/S42yt/tuubaa-bot/modules/level"
 	_ "github.com/S42yt/tuubaa-bot/modules/misc"
+	_ "github.com/S42yt/tuubaa-bot/modules/moderation"
 	_ "github.com/S42yt/tuubaa-bot/modules/roleplay"
 	_ "github.com/S42yt/tuubaa-bot/modules/ticket"
 	logger "github.com/S42yt/tuubaa-bot/utils/logger"

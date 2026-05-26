@@ -61,6 +61,7 @@ func init() {
 					{Name: "Art Channel 3", Value: "art_3"},
 					{Name: "Ticket Channel", Value: "ticket"},
 					{Name: "Ticket Log Channel", Value: "ticket_log"},
+					{Name: "Mod Log Channel", Value: "mod_log"},
 				},
 			},
 			{

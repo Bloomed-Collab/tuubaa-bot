@@ -70,6 +70,8 @@ func handleSetChannel(s *discordgo.Session, i *discordgo.InteractionCreate) erro
 		fieldName = "ticket_channel"
 	case "ticket_log":
 		fieldName = "ticket_log_channel"
+	case "mod_log":
+		fieldName = "mod_log_channel"
 	default:
 		return respond(s, i, "Unknown channel config key")
 	}
