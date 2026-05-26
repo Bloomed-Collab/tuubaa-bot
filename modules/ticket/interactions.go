@@ -18,7 +18,8 @@ func ticketInteractionHandler(s *discordgo.Session, i *discordgo.InteractionCrea
 		return
 	}
 
-	switch i.MessageComponentData().CustomID {
+	customID := i.MessageComponentData().CustomID
+	switch customID {
 	case "ticket:kunst":
 		openTicket(s, i, "kunst")
 	case "ticket:support":
@@ -35,6 +36,14 @@ func ticketInteractionHandler(s *discordgo.Session, i *discordgo.InteractionCrea
 		handleCloseConfirm(s, i)
 	case "ticket:kunst:confirm":
 		handleKunstConfirm(s, i)
+	case "ticket:add_user":
+		handleAddUserButton(s, i)
+	case "ticket:remove_user":
+		handleRemoveUserButton(s, i)
+	case "ticket:select_user:add":
+		handleUserSelect(s, i, "add")
+	case "ticket:select_user:remove":
+		handleUserSelect(s, i, "remove")
 	}
 }
 
@@ -270,6 +279,74 @@ func closeAndLogTicket(s *discordgo.Session, guildID, channelID, closedByID stri
 
 	deleteTicket(guildID, channelID)
 	s.ChannelDelete(channelID) //nolint:errcheck
+}
+
+func handleAddUserButton(s *discordgo.Session, i *discordgo.InteractionCreate) {
+	if !hasTeamRole(i.GuildID, i.Member) {
+		respondEphemeral(s, i, "Nur das Team kann User zu Tickets hinzufügen.")
+		return
+	}
+	t, err := getTicket(i.GuildID, i.ChannelID)
+	if err != nil || t == nil {
+		respondEphemeral(s, i, "Ticket nicht in der Datenbank gefunden.")
+		return
+	}
+	s.InteractionRespond(i.Interaction, buildUserSelectMessage("add")) //nolint:errcheck
+}
+
+func handleRemoveUserButton(s *discordgo.Session, i *discordgo.InteractionCreate) {
+	if !hasTeamRole(i.GuildID, i.Member) {
+		respondEphemeral(s, i, "Nur das Team kann User aus Tickets entfernen.")
+		return
+	}
+	t, err := getTicket(i.GuildID, i.ChannelID)
+	if err != nil || t == nil {
+		respondEphemeral(s, i, "Ticket nicht in der Datenbank gefunden.")
+		return
+	}
+	s.InteractionRespond(i.Interaction, buildUserSelectMessage("remove")) //nolint:errcheck
+}
+
+func handleUserSelect(s *discordgo.Session, i *discordgo.InteractionCreate, action string) {
+	deferEphemeral(s, i)
+
+	values := i.MessageComponentData().Values
+	if len(values) == 0 {
+		editResponse(s, i, "Kein User ausgewählt.")
+		return
+	}
+	targetUserID := values[0]
+
+	t, err := getTicket(i.GuildID, i.ChannelID)
+	if err != nil || t == nil {
+		editResponse(s, i, "Ticket nicht in der Datenbank gefunden.")
+		return
+	}
+
+	if action == "add" {
+		err = s.ChannelPermissionSet(i.ChannelID, targetUserID, discordgo.PermissionOverwriteTypeMember,
+			discordgo.PermissionViewChannel|discordgo.PermissionSendMessages|discordgo.PermissionAttachFiles, 0)
+		if err != nil {
+			logger.Warn("ticket: add user perm (button): %v", err)
+			editResponse(s, i, "Fehler beim Hinzufügen des Users.")
+			return
+		}
+		s.ChannelMessageSendComplex(i.ChannelID, buildUserAddedMessage(targetUserID, i.Member.User.ID)) //nolint:errcheck
+		editResponse(s, i, fmt.Sprintf("✅ <@%s> wurde zum Ticket hinzugefügt.", targetUserID))
+	} else {
+		if targetUserID == t.UserID {
+			editResponse(s, i, "Du kannst den Ticket-Ersteller nicht entfernen.")
+			return
+		}
+		err = s.ChannelPermissionDelete(i.ChannelID, targetUserID)
+		if err != nil {
+			logger.Warn("ticket: remove user perm (button): %v", err)
+			editResponse(s, i, "Fehler beim Entfernen des Users.")
+			return
+		}
+		s.ChannelMessageSendComplex(i.ChannelID, buildUserRemovedMessage(targetUserID, i.Member.User.ID)) //nolint:errcheck
+		editResponse(s, i, fmt.Sprintf("✅ <@%s> wurde aus dem Ticket entfernt.", targetUserID))
+	}
 }
 
 func handleKunstConfirm(s *discordgo.Session, i *discordgo.InteractionCreate) {

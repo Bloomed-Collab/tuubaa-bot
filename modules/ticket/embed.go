@@ -98,6 +98,19 @@ func buildInfoComponents(kind string, claimDisabled bool, teamRoleID string) []d
 		Emoji:    &discordgo.ComponentEmoji{Name: "🔒"},
 	}
 
+	addUserBtn := discordgo.Button{
+		Label:    "User hinzufügen",
+		Style:    discordgo.SuccessButton,
+		CustomID: "ticket:add_user",
+		Emoji:    &discordgo.ComponentEmoji{Name: "➕"},
+	}
+	removeUserBtn := discordgo.Button{
+		Label:    "User entfernen",
+		Style:    discordgo.DangerButton,
+		CustomID: "ticket:remove_user",
+		Emoji:    &discordgo.ComponentEmoji{Name: "➖"},
+	}
+
 	var btns []discordgo.MessageComponent
 	if kind == "kunst" {
 		btns = []discordgo.MessageComponent{
@@ -112,6 +125,7 @@ func buildInfoComponents(kind string, claimDisabled bool, teamRoleID string) []d
 	return []discordgo.MessageComponent{
 		container.Build(),
 		discordgo.ActionsRow{Components: btns},
+		discordgo.ActionsRow{Components: []discordgo.MessageComponent{addUserBtn, removeUserBtn}},
 	}
 }
 
@@ -157,6 +171,54 @@ func buildKunstConfirmMessage(userID string) *discordgo.MessageSend {
 	return &discordgo.MessageSend{
 		Components: []discordgo.MessageComponent{container.Build()},
 		Flags:      discordgo.MessageFlagsIsComponentsV2,
+	}
+}
+
+func buildUserAddedMessage(userID, addedByID string) *discordgo.MessageSend {
+	container := v2.NewContainerBuilder().SetAccentColor(0x2ecc71)
+	container.AddComponent(v2.NewTextDisplayBuilder().SetContent(
+		fmt.Sprintf("➕ <@%s> wurde von <@%s> zum Ticket hinzugefügt.", userID, addedByID),
+	).Build())
+	return &discordgo.MessageSend{
+		Components: []discordgo.MessageComponent{container.Build()},
+		Flags:      discordgo.MessageFlagsIsComponentsV2,
+	}
+}
+
+func buildUserRemovedMessage(userID, removedByID string) *discordgo.MessageSend {
+	container := v2.NewContainerBuilder().SetAccentColor(0xe74c3c)
+	container.AddComponent(v2.NewTextDisplayBuilder().SetContent(
+		fmt.Sprintf("➖ <@%s> wurde von <@%s> aus dem Ticket entfernt.", userID, removedByID),
+	).Build())
+	return &discordgo.MessageSend{
+		Components: []discordgo.MessageComponent{container.Build()},
+		Flags:      discordgo.MessageFlagsIsComponentsV2,
+	}
+}
+
+func buildUserSelectMessage(action string) *discordgo.InteractionResponse {
+	var placeholder string
+	if action == "add" {
+		placeholder = "User auswählen zum Hinzufügen..."
+	} else {
+		placeholder = "User auswählen zum Entfernen..."
+	}
+	return &discordgo.InteractionResponse{
+		Type: discordgo.InteractionResponseChannelMessageWithSource,
+		Data: &discordgo.InteractionResponseData{
+			Flags: discordgo.MessageFlagsEphemeral,
+			Components: []discordgo.MessageComponent{
+				discordgo.ActionsRow{
+					Components: []discordgo.MessageComponent{
+						discordgo.SelectMenu{
+							CustomID:    "ticket:select_user:" + action,
+							MenuType:    discordgo.UserSelectMenu,
+							Placeholder: placeholder,
+						},
+					},
+				},
+			},
+		},
 	}
 }
 

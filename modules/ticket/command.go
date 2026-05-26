@@ -19,6 +19,10 @@ func ticketCommandHandler(s *discordgo.Session, i *discordgo.InteractionCreate) 
 		return handleSetup(s, i)
 	case "create":
 		return handleCreate(s, i, sub)
+	case "add_user":
+		return handleAddUser(s, i, sub)
+	case "remove_user":
+		return handleRemoveUser(s, i, sub)
 	}
 	return nil
 }
@@ -117,5 +121,85 @@ func handleCreate(s *discordgo.Session, i *discordgo.InteractionCreate, sub *dis
 	})
 
 	editResponse(s, i, fmt.Sprintf("✅ Ticket erstellt: <#%s>", ch.ID))
+	return nil
+}
+
+func handleAddUser(s *discordgo.Session, i *discordgo.InteractionCreate, sub *discordgo.ApplicationCommandInteractionDataOption) error {
+	deferEphemeral(s, i)
+
+	t, err := getTicket(i.GuildID, i.ChannelID)
+	if err != nil || t == nil {
+		editResponse(s, i, "Dieser Kanal ist kein Ticket.")
+		return nil
+	}
+
+	if !hasTeamRole(i.GuildID, i.Member) {
+		editResponse(s, i, "Nur das Team kann User zu Tickets hinzufügen.")
+		return nil
+	}
+
+	var targetUser *discordgo.User
+	for _, opt := range sub.Options {
+		if opt.Name == "member" {
+			targetUser = opt.UserValue(s)
+		}
+	}
+	if targetUser == nil {
+		editResponse(s, i, "Member nicht gefunden.")
+		return nil
+	}
+
+	err = s.ChannelPermissionSet(i.ChannelID, targetUser.ID, discordgo.PermissionOverwriteTypeMember,
+		discordgo.PermissionViewChannel|discordgo.PermissionSendMessages|discordgo.PermissionAttachFiles, 0)
+	if err != nil {
+		logger.Warn("ticket: add user perm: %v", err)
+		editResponse(s, i, "Fehler beim Hinzufügen des Users.")
+		return nil
+	}
+
+	s.ChannelMessageSendComplex(i.ChannelID, buildUserAddedMessage(targetUser.ID, i.Member.User.ID)) //nolint:errcheck
+	editResponse(s, i, fmt.Sprintf("✅ <@%s> wurde zum Ticket hinzugefügt.", targetUser.ID))
+	return nil
+}
+
+func handleRemoveUser(s *discordgo.Session, i *discordgo.InteractionCreate, sub *discordgo.ApplicationCommandInteractionDataOption) error {
+	deferEphemeral(s, i)
+
+	t, err := getTicket(i.GuildID, i.ChannelID)
+	if err != nil || t == nil {
+		editResponse(s, i, "Dieser Kanal ist kein Ticket.")
+		return nil
+	}
+
+	if !hasTeamRole(i.GuildID, i.Member) {
+		editResponse(s, i, "Nur das Team kann User aus Tickets entfernen.")
+		return nil
+	}
+
+	var targetUser *discordgo.User
+	for _, opt := range sub.Options {
+		if opt.Name == "member" {
+			targetUser = opt.UserValue(s)
+		}
+	}
+	if targetUser == nil {
+		editResponse(s, i, "Member nicht gefunden.")
+		return nil
+	}
+
+	if targetUser.ID == t.UserID {
+		editResponse(s, i, "Du kannst den Ticket-Ersteller nicht entfernen.")
+		return nil
+	}
+
+	err = s.ChannelPermissionDelete(i.ChannelID, targetUser.ID)
+	if err != nil {
+		logger.Warn("ticket: remove user perm: %v", err)
+		editResponse(s, i, "Fehler beim Entfernen des Users.")
+		return nil
+	}
+
+	s.ChannelMessageSendComplex(i.ChannelID, buildUserRemovedMessage(targetUser.ID, i.Member.User.ID)) //nolint:errcheck
+	editResponse(s, i, fmt.Sprintf("✅ <@%s> wurde aus dem Ticket entfernt.", targetUser.ID))
 	return nil
 }

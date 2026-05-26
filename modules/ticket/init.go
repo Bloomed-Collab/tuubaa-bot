@@ -31,6 +31,32 @@ func init() {
 					},
 				},
 			},
+			{
+				Type:        discordgo.ApplicationCommandOptionSubCommand,
+				Name:        "add_user",
+				Description: "Füge einen User zum aktuellen Ticket hinzu",
+				Options: []*discordgo.ApplicationCommandOption{
+					{
+						Type:        discordgo.ApplicationCommandOptionUser,
+						Name:        "member",
+						Description: "Der User der hinzugefügt werden soll",
+						Required:    true,
+					},
+				},
+			},
+			{
+				Type:        discordgo.ApplicationCommandOptionSubCommand,
+				Name:        "remove_user",
+				Description: "Entferne einen User aus dem aktuellen Ticket",
+				Options: []*discordgo.ApplicationCommandOption{
+					{
+						Type:        discordgo.ApplicationCommandOptionUser,
+						Name:        "member",
+						Description: "Der User der entfernt werden soll",
+						Required:    true,
+					},
+				},
+			},
 		},
 		Handler: ticketCommandHandler,
 	}
