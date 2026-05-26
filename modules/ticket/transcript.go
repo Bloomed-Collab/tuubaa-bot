@@ -46,7 +46,7 @@ func buildTXT(msgs []*discordgo.Message) []byte {
 		if m.Author != nil {
 			name = m.Author.Username
 		}
-		ts := m.Timestamp.Format("02.01.2006 15:04")
+		ts := m.Timestamp.In(berlinLoc).Format("02.01.2006 15:04")
 		buf.WriteString(fmt.Sprintf("[%s] %s: %s\n", ts, name, m.Content))
 		for _, a := range m.Attachments {
 			buf.WriteString(fmt.Sprintf("  [Attachment: %s]\n", a.URL))
@@ -193,9 +193,9 @@ func buildHTML(msgs []*discordgo.Message, ticketKind string, openedByName string
 		html.EscapeString(k.icon),
 		html.EscapeString(k.title),
 		html.EscapeString(openedByName),
-		openedAt.Format("02.01.2006 15:04"),
+		openedAt.In(berlinLoc).Format("02.01.2006 15:04"),
 		html.EscapeString(closedByName),
-		closedAt.Format("02.01.2006 15:04"),
+		closedAt.In(berlinLoc).Format("02.01.2006 15:04"),
 		len(msgs),
 	))
 
@@ -230,7 +230,7 @@ func buildHTML(msgs []*discordgo.Message, ticketKind string, openedByName string
 			groupClass = " first-in-group"
 		}
 
-		ts := m.Timestamp.Format("02.01.2006 15:04")
+		ts := m.Timestamp.In(berlinLoc).Format("02.01.2006 15:04")
 
 		buf.WriteString(fmt.Sprintf(`<div class="msg%s">`, groupClass))
 

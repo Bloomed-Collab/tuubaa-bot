@@ -8,6 +8,8 @@ import (
 	"github.com/bwmarrin/discordgo"
 )
 
+var berlinLoc, _ = time.LoadLocation("Europe/Berlin")
+
 type kindInfo struct {
 	icon        string
 	title       string
@@ -239,9 +241,9 @@ func buildTicketLogMessage(t *ticketEntry, openedByName, closedByName, closedByI
 				"**Geschlossen von:** <@%s> (`%s`)\n"+
 				"**Geschlossen am:** %s",
 			t.UserID, openedByName,
-			t.OpenedAt.Format("02.01.2006 um 15:04 Uhr"),
+			t.OpenedAt.In(berlinLoc).Format("02.01.2006 um 15:04 Uhr"),
 			closedByID, closedByName,
-			closedAt.Format("02.01.2006 um 15:04 Uhr"),
+			closedAt.In(berlinLoc).Format("02.01.2006 um 15:04 Uhr"),
 		),
 	).Build())
 	if t.ClaimedBy != "" {
