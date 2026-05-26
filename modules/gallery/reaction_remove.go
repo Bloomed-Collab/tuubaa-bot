@@ -20,10 +20,21 @@ func reactionRemoveHandler(s *discordgo.Session, r *discordgo.MessageReactionRem
 	if err != nil || msg.Author == nil {
 		return
 	}
-	if r.UserID != msg.Author.ID {
+	existing, err := getPost(r.GuildID, r.ChannelID, r.MessageID)
+	if err != nil {
+		logger.Warn("gallery: getPost: %v", err)
 		return
 	}
 
+	// Non-author removing their star: just update the count
+	if r.UserID != msg.Author.ID {
+		if existing != nil {
+			updateGalleryStarCount(s, msg, existing)
+		}
+		return
+	}
+
+	// Author removing their star: delete the gallery post
 	threadID, postID, err := deletePost(r.GuildID, r.ChannelID, r.MessageID)
 	if err != nil {
 		logger.Warn("gallery: deletePost: %v", err)
