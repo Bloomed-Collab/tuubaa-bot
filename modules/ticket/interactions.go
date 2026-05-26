@@ -253,13 +253,18 @@ func closeAndLogTicket(s *discordgo.Session, guildID, channelID, closedByID stri
 		htmlData := buildHTML(msgs, t.Kind, openedByName, t.OpenedAt, closedByName, closedAt)
 
 		logMsg := buildTicketLogMessage(t, openedByName, closedByName, closedByID, closedAt)
-		logMsg.Files = []*discordgo.File{
-			{Name: "transcript.txt", Reader: bytes.NewReader(txtData)},
-			{Name: "transcript.html", Reader: bytes.NewReader(htmlData)},
-		}
-
 		if _, err := s.ChannelMessageSendComplex(logChannelID, logMsg); err != nil {
 			logger.Warn("ticket: send log message: %v", err)
+		}
+
+		filesMsg := &discordgo.MessageSend{
+			Files: []*discordgo.File{
+				{Name: "transcript.txt", Reader: bytes.NewReader(txtData)},
+				{Name: "transcript.html", Reader: bytes.NewReader(htmlData)},
+			},
+		}
+		if _, err := s.ChannelMessageSendComplex(logChannelID, filesMsg); err != nil {
+			logger.Warn("ticket: send transcript files: %v", err)
 		}
 	}
 
