@@ -120,6 +120,8 @@ func buildInfoComponents(kind string, claimDisabled bool, teamRoleID string) []d
 			claimBtn,
 			closeBtn,
 		}
+	} else if kind == "fanarts" {
+		btns = []discordgo.MessageComponent{closeBtn}
 	} else {
 		btns = []discordgo.MessageComponent{claimBtn, closeBtn}
 	}
